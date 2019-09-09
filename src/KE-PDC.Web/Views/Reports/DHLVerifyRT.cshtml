@@ -1,0 +1,377 @@
+﻿@model DHLVerifyRTUpdateViewModel
+
+@{
+    ViewData["Action"] = "dhlverifyrt";
+    ViewData["Title"] = "DHL Verify for RT";
+}
+
+@section links {
+    <link rel="stylesheet" href="~/lib/bootstrap-select/dist/css/bootstrap-select.css" />
+    <link rel="stylesheet" href="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.css" />
+    <script src="~/lib/jquery-maskmoney/dist/jquery.maskMoney.min.js"></script>
+}
+
+@section scripts {
+    <script src="~/lib/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.js"></script>
+    <script src="~/lib/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+    <script src="~/lib/jquery-maskmoney/dist/jquery.maskMoney.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/moment/min/moment-with-locales.min.js"></script>
+    <script src="~/lib/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/lib/bootstrap-tagsinput/dist/bootstrap-tagsinput.js"></script>
+    <script src="~/lib/matchheight/dist/jquery.matchHeight-min.js"></script>
+    <script src="~/assets/javascripts/bootstrap-select-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootgrid-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootstrap-datetimepicker.js"></script>
+    <script src="~/assets/javascripts/jquery.validation-default.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var decimalToString = function (value) {
+                return parseFloat(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            var numericToString = function (value) {
+                return parseInt(value).toLocaleString();
+            }
+
+            // FORM SEARCH
+            // ======================
+            var searchFirstTime = true;
+            var gridSearchResults;
+
+            $('[type=reset]').click(function (e) {
+                e.preventDefault();
+                $(this).closest('form').get(0).reset();
+                $("select").selectpicker('render');
+            });
+
+            $('#modalSummaryCommissionDetail').on("show.bs.modal", function () {
+                var btn = $(this).find('[data-command="ItemDetail"]');
+                btn.on("click", function () {
+                    $("#modalSummaryCommissionItemDetail")
+                    .find(".modal-title").text($(this).data("name"))
+                    .end().modal("show");
+                });
+            });
+
+            $('form[data-toggle="search"]').validate({
+                submitHandler: function (form) {
+                    $.pageLoader("show");
+                    var $form = $(form);
+
+                    if (searchFirstTime) {
+
+                        searchFirstTime = false;
+
+                        gridSearchResults = $("#grid-search-results").bootgrid({
+                            url: endpoint + "DHLVerifyRT",
+                            requestHandler: function (request) {
+                                var BranchList = $form.find('select[name="BranchList"]').val(),
+                                    request = {
+                                        BranchList: typeof BranchList == "object" ? BranchList.join(",") : BranchList,
+                                        MonthYear: $form.find('input[name="MonthYear"]').val(),
+
+                                        // Pagination
+                                        page: request.current,
+                                        perPage: request.rowCount,
+                                        order: Object.keys(request.sort)[0],
+                                        direction: request.sort[Object.keys(request.sort)[0]],
+                                        searchPhrase: request.searchPhrase,
+                                    };
+
+                                $("#modalUpdatePR").find('[name="MonthYear"]').val($form.find('input[name="MonthYear"]').val());
+                                $("#grid-search-results").data("export-params", request);
+
+                                return request;
+                            },
+                            sorting: false,
+                            templates: {
+                                header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static">@SharedLocalizer["Search Results"]</h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20"><buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-search-results">@SharedLocalizer["Export (Excel)"]</buttom><buttom class="btn btn-default hidden" data-ke-action="export" data-ke-filetype="pdf" data-ke-target="#grid-search-results"><i class="ion-document-text"></i> @SharedLocalizer["Export (PDF)"]</buttom></div></div></div></div>',
+                            },
+                            formatters: {
+                                decimal: function (column, row) {
+                                    return row[column.id] == null ? "-" : column.converter.to(row[column.id]);
+                                },
+                                monthyear: function (column, row) {
+                                    return $("#grid-search-results").data("export-params").MonthYear
+                                },
+                                status: function (column, row) {
+                                    if (row.fcConfirmDate == null) {
+                                        return '';
+                                    }
+                                    else {
+                                        return '<span data-id="status" class="text-success">Confirmed</span>';
+                                    }
+                                },
+                                commands: function (column, row) {
+                                    var btnEdit = '<button class="btn btn-xs btn-default" disabled><i class="ion-edit"></i> @Localizer["Edit"]</button>';
+
+                                    if (row.fcConfirmDate == null) {
+                                        btnEdit = '<button class="btn btn-xs btn-outline-warning" data-command="edit" data-row-branch="' + row.branchID + '" data-row-dhl="' + row.dhlService + '" data-row-dhl-adjustment="' + row.dhlAdjustment + '" data-row-dhl-total="' + row.dhlTotal + '"><i class="ion-edit"></i> @Localizer["Edit"]</button>';
+                                    }
+
+                                    return '<button class="btn btn-xs btn-default" data-command="view" data-row-branch="' + row.branchID + '"><i class="ion-search"></i> @Localizer["View"]</button>'
+                                        + ' ' + btnEdit;
+
+                                    @*return '<button class="btn btn-xs btn-default" data-command="view" data-row-branch="' + row.branchID + '"><i class="ion-search"></i> @Localizer["View"]</button>'
+                                        + ' ' + btnEdit;*@
+                                },
+                            }
+                        })
+                        .on("loaded.rs.jquery.bootgrid", function () {
+                            $.pageLoader("hide");
+
+                            $(this).find('[data-command="edit"]').on("click", function () {
+                                var that = this,
+                                    branch = $(that).data("row-branch"),
+                                    dhl = $(that).data("row-dhl"),
+                                    adjustment = $(that).data("row-dhl-adjustment"),
+                                    total = $(that).data("row-dhl-total");
+
+                                $("#modalUpdateDHL")
+                                .find('[data-column-id="branchID"]').text(branch)
+                                .end().find('[data-column-id="monthYear"]').text($("#grid-search-results").data("export-params").MonthYear)
+                                .end().find('[data-column-id="dhl"]').text(decimalToString(dhl))
+                                .end().find('[data-column-id="dhl-adjustment"]').val(decimalToString(adjustment))
+                                .end().find('[data-column-id="dhl-total"]').text(decimalToString(total))
+                                .end().find('[name="BranchID"]').val(branch)
+                                .end().find('[name="MonthYear"]').val($("#grid-search-results").data("export-params").MonthYear)
+                                .end().modal({ backdrop: "static", keyboard: false }).modal("show");
+                            })
+                            .end().find('[data-command="view"]').on("click", function () {
+                                var that = this,
+                                    branch = $(that).data("row-branch");
+
+                                $.pageLoader("show");
+
+                                $.get(endpoint + "DHLVerifyRT/NoneShipment/" + branch, {
+                                    MonthYear: $("#grid-search-results").data("export-params").MonthYear,
+                                }, function (response) {
+                                    if (response.success) {
+                                        var result = response.result,
+                                            totalUnitPrice = 0,
+                                            totalQuantity = 0,
+                                            totalBeforeVat = 0,
+                                            totalTotalVat = 0,
+                                            totalAmount = 0;
+
+                                        $.each(result, function (key, value) {
+                                            $('#modalViewDHL').find("table tbody").append('<tr>'
+                                                + '<td class="bg-m-blue bg-m-lighten-5">' + value.recordID + '</td>'
+                                                + '<td class="text-center">' + moment(value.createdDateTime).format("DD/MM/YYYY HH:SS") + '</td>'
+                                                + '<td class="text-right">' + decimalToString(value.unitPrice) + '</td>'
+                                                + '<td class="text-right">' + numericToString(value.quantity) + '</td>'
+                                                + '<td class="text-right">' + decimalToString(value.beforeVat) + '</td>'
+                                                + '<td class="text-right">' + decimalToString(value.totalVat) + '</td>'
+                                                + '<td class="text-right bg-m-orange bg-m-lighten-5"><strong>' + decimalToString(value.amount) + '</strong></td>'
+                                                + '</tr>');
+
+                                            totalUnitPrice += value.unitPrice;
+                                            totalQuantity += value.quantity;
+                                            totalBeforeVat += value.beforeVat;
+                                            totalTotalVat += value.totalVat;
+                                            totalAmount += value.amount;
+                                        });
+
+                                        $('#modalViewDHL')
+                                        .find('[data-column-id="branchID"]').text(branch)
+                                        .end().find('[data-column-id="monthYear"]').text($("#grid-search-results").data("export-params").MonthYear)
+                                        .end().find("table tfoot").append('<tr>'
+                                        + '<td colspan="2" class="text-right"><strong>Total</strong></td>'
+                                        + '<td class="text-right"><strong>' + decimalToString(totalUnitPrice) + '</strong></td>'
+                                        + '<td class="text-right"><strong>' + numericToString(totalQuantity) + '</strong></td>'
+                                        + '<td class="text-right"><strong>' + decimalToString(totalBeforeVat) + '</strong></td>'
+                                        + '<td class="text-right"><strong>' + decimalToString(totalTotalVat) + '</strong></td>'
+                                        + '<td class="text-right bg-m-orange bg-m-lighten-4"><strong>' + decimalToString(totalAmount) + '</strong></td>'
+                                        + '</tr>')
+                                        .end().modal("show");
+
+                                        $.pageLoader("hide");
+                                    }
+                                    else {
+                                        var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                                        swal("Error", message, "error");
+                                        return false;
+                                    }
+                                });
+                            })
+                            .end().find('button[disabled]').parents("tr").addClass("bg-m-gray bg-m-lighten-3 text-m-gray");
+                        })
+                        .on("selected.rs.jquery.bootgrid", function (e) {
+                            $(this).find(".select-box-disabled").parents("tr.active").removeClass("active")
+                        });
+
+                        $("#card-search-results, #card-search-status").delay(500).fadeIn(300);
+                    }
+                    else {
+                        gridSearchResults.bootgrid("reload");
+                    }
+                }
+            });
+
+            // FORM UPDATE DHL
+            // ======================
+            $("#formUpdateDHL").validate({
+                submitHandler: function (form) {
+                    swal({
+                        title: "Are you sure?",
+                        text: "Confirm this information to be recorded",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonClass: "btn-outline-primary",
+                        confirmButtonText: "Yes, confirm it!",
+                        closeOnConfirm: false
+                    }, function () {
+                        var $form = $(form);
+                        $.ajax({
+                            url: endpoint + "DHLVerifyRT",
+                            type: "POST",
+                            data: new FormData($form.get(0)),
+                            cache: false,
+                            contentType: false,
+                            processData: false,
+                            success: function (response) {
+                                if (response.success) {
+                                    swal("Updated", response.messages[0], "success");
+                                    $("#modalUpdateDHL").modal("hide");
+                                    $.pageLoader("hide");
+                                    $("#grid-search-results").bootgrid("reload");
+                                }
+                                else {
+                                    var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                                    swal("Error", message, "error");
+                                    return false;
+                                }
+                            }
+                        });
+                    });
+                }
+            });
+
+            // EXPORT
+            // ======================
+            $("body").on("click", '[data-ke-action="export"]', function (e) {
+                var $this = $(this),
+                    $target = $($this.data("ke-target")),
+                    params = $target.data("export-params"),
+                    filetype = $this.data("ke-filetype");
+
+                if (typeof params === "undefined") {
+                    params = "";
+                }
+                else {
+                    var str = [];
+
+                    for (var p in params) {
+                        if (params.hasOwnProperty(p)) {
+                            str.push(encodeURIComponent(p) + "=" + encodeURIComponent(params[p]));
+                        }
+                    }
+                    params = "&" + str.join("&");
+                }
+
+                var redirectWindow = window.open(endpoint + "MonthlyCommission?Type=rt&FileType=" + filetype + params, '_blank');
+                redirectWindow.location;
+            });
+
+
+            $('#modalViewDHL').on("show.bs.modal", function () {
+            }).on("hidden.bs.modal", function () {
+                $(this).find("table tbody tr, table tfoot tr").remove()
+            });
+        });
+    </script>
+}
+
+<div class="block-header">
+    <h2 class="block-title">@ViewData["Title"]</h2>
+</div>
+
+@await Html.PartialAsync("Shared/_FormSearchFCBranchMonthlyPartial")
+
+<div id="card-search-results" class="card" style="display:none;">
+    <div class="card-body table-responsive">
+        <div>
+            <table id="grid-search-results" class="table table-card table-bordered table-condensed table-hover unordered">
+                <thead>
+                    <tr>
+                        <th data-column-id="branchID" data-identifier="true" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["Branch"]</th>
+                        <th data-column-id="monthyear" data-formatter="monthyear" data-css-class="text-center" data-header-css-class="bg-m-gray bg-m-lighten-3" data-header-align="center">@Localizer["Month/Year"]</th>
+                        <th data-column-id="dhlService" data-type="decimal" data-formatter="decimal" data-css-class="text-right" data-header-css-class="bg-m-orange bg-m-lighten-5" data-header-align="right">@Localizer["DHL Service"]</th>
+                        <th data-column-id="dhlAdjustment" data-type="decimal" data-formatter="decimal" data-css-class="text-right" data-header-css-class="bg-m-orange bg-m-lighten-5" data-header-align="right">@Localizer["DHL Adjustment"]</th>
+                        <th data-column-id="dhlTotal" data-type="decimal" data-formatter="decimal" data-css-class="text-right" data-header-css-class="bg-m-orange bg-m-lighten-5" data-header-align="right">@Localizer["DHL Total"]</th>
+                        <th data-column-id="commands" data-formatter="commands" data-css-class="text-center" data-header-css-class="bg-m-orange bg-m-lighten-5" data-header-align="center" data-width="auto; white-space: nowrap !important">@Localizer["Commands"]</th>
+                        <th data-column-id="ststus" data-formatter="ststus" data-css-class="text-center" data-header-css-class="bg-m-orange bg-m-lighten-5" data-header-align="center" data-width="auto; white-space: nowrap !important">@Localizer["Status"]</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="modalUpdateDHL" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-md" role="document">
+        <form id="formUpdateDHL" class="form-horizontal">
+            <input asp-for="BranchID" type="hidden" />
+            <input asp-for="MonthYear" type="hidden" />
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Update DHL Branch #<span data-column-id="branchID"></span>&nbsp;&nbsp;&nbsp;&nbsp;<span data-column-id="monthYear"></span></h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="exampleInputEmail1">DHL Service</label>
+                            <p class="form-control-static" data-column-id="dhl"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="DHLAdjustment">DHL Adjustment</label>
+                            <input asp-for="DHLAdjustment" class="form-control maskmoney" value="0.00" data-column-id="dhl-adjustment" data-allow-negative="true">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="exampleInputEmail1">DHL Total</label>
+                            <p class="form-control-static" data-column-id="dhl-total"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-outline-primary">Update</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </form>
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div id="modalViewDHL" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">View DHL Branch #<span data-column-id="branchID"></span>&nbsp;&nbsp;&nbsp;&nbsp;<span data-column-id="monthYear"></span></h4>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-condensed table-bordered">
+                        <thead>
+                            <tr>
+                                <th class="bg-m-blue bg-m-lighten-5">@Localizer["Record ID"]</th>
+                                <th class="text-center bg-m-orange bg-m-lighten-4">@Localizer["Create Date"]</th>
+                                <th class="text-right bg-m-orange bg-m-lighten-4">@Localizer["Unit Price"]</th>
+                                <th class="text-right bg-m-orange bg-m-lighten-4">@Localizer["Quantity"]</th>
+                                <th class="text-right bg-m-orange bg-m-lighten-4">@Localizer["Before Vat"]</th>
+                                <th class="text-right bg-m-orange bg-m-lighten-4">@Localizer["Total Vat"]</th>
+                                <th class="text-right bg-m-orange bg-m-lighten-4">@SharedLocalizer["Amount"]</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                        <tfoot></tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

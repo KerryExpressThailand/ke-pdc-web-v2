@@ -1,0 +1,200 @@
+/*!
+ * KE-Frontend Framework v0.0.1 (https://th.kerryexpress.com)
+ * Copyright 2016 Kerry Express (Thailand) Limited.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ */
+body {
+  background-color: #58595B;
+}
+
+a {
+  color: #9B9B9B;
+  text-decoration: none;
+}
+
+a:hover, a:focus {
+  color: #c1c1c1;
+}
+
+.login {
+  position: relative;
+}
+
+.login .login-logo,
+.login .login-logo-app {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.login .login-logo {
+  margin-top: 50px;
+}
+
+.login .login-logo-app img {
+  width: auto;
+  max-height: 50px;
+}
+
+.login .btn {
+  text-transform: uppercase;
+}
+
+.login .login-form {
+  margin-bottom: 50px;
+}
+
+@media (min-width: 768px) {
+  .login .login-logo {
+    margin-top: 150px;
+  }
+  .login .login-col {
+    height: 190px;
+    line-height: 190px;
+  }
+  .login .login-col * {
+    line-height: 1;
+  }
+  .login .login-logo-app {
+    text-align: right;
+    margin-bottom: 0;
+    padding-right: 50px;
+    border-right: 1px solid #868686;
+  }
+  .login .login-logo-app img {
+    max-height: 100%;
+  }
+  .login .login-form {
+    padding-left: 50px;
+  }
+  .login .login-form .login-form-wrapper {
+    display: inline-block;
+    width: 100%;
+    vertical-align: middle;
+  }
+}
+
+.login-bg {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #58595B;
+  background-image: url(../images/backgrounds/bg-login.jpg);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.form-control {
+  color: #4e4e4e !important;
+  line-height: 1.42857;
+  background-color: #fff;
+  border: none;
+}
+
+.form-control:focus {
+  border-color: #F46F24;
+  outline: 0;
+  /*@include box-shadow(inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px $color-rgba);*/
+}
+
+.has-success .help-block,
+.has-success .control-label,
+.has-success .radio,
+.has-success .checkbox,
+.has-success .radio-inline,
+.has-success .checkbox-inline,
+.has-success.radio label,
+.has-success.checkbox label,
+.has-success.radio-inline label,
+.has-success.checkbox-inline label {
+  color: #67bd6a;
+}
+
+.has-success .form-control {
+  border-color: #67bd6a;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+
+.has-success .form-control:focus {
+  border-color: #49a84c;
+}
+
+.has-success .input-group-addon {
+  color: #67bd6a;
+  border-color: #67bd6a;
+  background-color: #f1fff1;
+}
+
+.has-success .form-control-feedback {
+  color: #67bd6a;
+}
+
+.has-warning .help-block,
+.has-warning .control-label,
+.has-warning .radio,
+.has-warning .checkbox,
+.has-warning .radio-inline,
+.has-warning .checkbox-inline,
+.has-warning.radio label,
+.has-warning.checkbox label,
+.has-warning.radio-inline label,
+.has-warning.checkbox-inline label {
+  color: #ffa829;
+}
+
+.has-warning .form-control {
+  border-color: #ffa829;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+
+.has-warning .form-control:focus {
+  border-color: #f59100;
+}
+
+.has-warning .input-group-addon {
+  color: #ffa829;
+  border-color: #ffa829;
+  background-color: #fff8ed;
+}
+
+.has-warning .form-control-feedback {
+  color: #ffa829;
+}
+
+.has-error .help-block,
+.has-error .control-label,
+.has-error .radio,
+.has-error .checkbox,
+.has-error .radio-inline,
+.has-error .checkbox-inline,
+.has-error.radio label,
+.has-error.checkbox label,
+.has-error.radio-inline label,
+.has-error.checkbox-inline label {
+  color: #f6675d;
+}
+
+.has-error .form-control {
+  border-color: #f6675d;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+
+.has-error .form-control:focus {
+  border-color: #f33a2d;
+}
+
+.has-error .input-group-addon {
+  color: #f6675d;
+  border-color: #f6675d;
+  background-color: #fff2f1;
+}
+
+.has-error .form-control-feedback {
+  color: #f6675d;
+}
+
+.form-control-feedback {
+  line-height: 34px !important;
+}

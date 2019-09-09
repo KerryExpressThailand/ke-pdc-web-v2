@@ -1,0 +1,613 @@
+@model DailyRevenueDetailViewModel
+
+@{
+    ViewData["Controller"] = ViewContext.RouteData.Values["controller"].ToString().ToLower();
+    ViewData["Action"] = ViewContext.RouteData.Values["action"].ToString().ToLower();
+    ViewData["Title"] = "Parcel Shop";
+
+
+    switch (ViewData["Action"].ToString())
+    {
+        case "closeshop":
+            ViewData["Action"] = "closeshop";
+            ViewData["Title"] = "Close Shop"; break;
+    }
+}
+
+@section links {
+    <link rel="stylesheet" href="~/lib/bootstrap-select/dist/css/bootstrap-select.css" />
+    <link rel="stylesheet" href="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.css" />
+    <link rel="stylesheet" href="~/assets/stylesheets/confirm.css" />
+}
+
+@section scripts {
+    <script src="~/lib/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.js"></script>
+    <script src="~/lib/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+    <script src="~/lib/jquery-maskmoney/dist/jquery.maskMoney.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/moment/min/moment-with-locales.min.js"></script>
+    <script src="~/lib/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/lib/bootstrap-tagsinput/dist/bootstrap-tagsinput.js"></script>
+    <script src="~/lib/matchheight/dist/jquery.matchHeight-min.js"></script>
+    <script src="~/assets/javascripts/bootstrap-select-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootgrid-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootstrap-datetimepicker.js"></script>
+    <script src="~/assets/javascripts/jquery.validation-default.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            // FORM SEARCH
+            // ======================
+            var searchFirstTime = true;
+            var gridSearchResults;
+
+            $('[type=reset]').click(function (e) {
+                e.preventDefault();
+                $(this).closest('form').get(0).reset();
+                $("select").selectpicker('render');
+            });
+
+            $('[data-command="confirm-selection"]').on("click", function (e) {
+                e.preventDefault();
+                var selected = $("#grid-search-results").bootgrid("getSelectedRows");
+
+                if (selected.length == 0) {
+                    swal("Confirm", "Please select the information to be Export!", "warning")
+                }
+                else {
+                    var params = $("#grid-search-results").data("export-params");
+                    params.BranchList = typeof selected == "object" ? selected.join(",") : selected
+
+                    if (typeof params === "undefined") {
+                        params = "";
+                    }
+                    else {
+                        var str = [];
+
+                        for (var p in params) {
+                            if (params.hasOwnProperty(p)) {
+                                str.push(encodeURIComponent(p) + "=" + encodeURIComponent(params[p]));
+                            }
+                        }
+                        params = "&" + str.join("&");
+                    }
+
+                    var redirectWindow = window.open(endpoint + "ParcelShop/CloseShopExport?FileType=pdf" + params, '_blank');
+                    redirectWindow.location;
+                }
+            });
+
+            $("#form-search").validate({
+                submitHandler: function (form) {
+                    $.pageLoader("show");
+                    var $form = $(form);
+
+                    if (searchFirstTime) {
+
+                        searchFirstTime = false;
+
+                        gridSearchResults = $("#grid-search-results").bootgrid({
+                            url: endpoint + "ParcelShop/CloseShop",
+                            requestHandler: function (request) {
+                                var BranchList = $form.find('select[name="BranchList"]').val(),
+                                    request = {
+                                        Type: "@ViewData["Action"]",
+                                        BranchType: $form.find('select[name="BranchType"]').val(),
+                                        BranchList: typeof BranchList == "object" ? BranchList.join(",") : BranchList,
+                                        DateFrom: $form.find('input[name="DateFrom"]').val(),
+
+                                        // Pagination
+                                        page: request.current,
+                                        perPage: request.rowCount,
+                                        order: Object.keys(request.sort)[0],
+                                        direction: request.sort[Object.keys(request.sort)[0]],
+                                        searchPhrase: request.searchPhrase,
+                                    };
+
+                                $("#grid-search-results").data("export-params", request);
+
+                                return request;
+                            },
+                            sorting: false,
+                            selection: true,
+                            multiSelect: true,
+                            keepSelection: true,
+                            statusMapping: {
+                                0: "danger",
+                                1: "",
+                                2: "",
+                                3: "",
+                            },
+                            templates: {
+                                header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static">@SharedLocalizer["Search Results"]</h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20">@if (ViewData["Action"].Equals("xxx")) { <buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-search-results">@SharedLocalizer["Export (Excel)"]</buttom>}@if (ViewData["Action"].Equals("xxx") || true) { <buttom class="btn btn-default" data-ke-action="export" data-ke-type="closecover" data-ke-filetype="pdf" data-ke-target="#grid-search-results"><i class="ion-document-text"></i> @Localizer["Export All"]</buttom>}</div></div></div></div>',
+                            },
+                            formatters: {
+                                status: function (column, row) {
+                                    var icon = "ion-close-circled",
+                                        classIcon = "text-m-red";
+
+                                    if (row.status == 1) {
+                                        icon = "ion-checkmark-circled";
+                                        classIcon = "text-m-green";
+                                    }
+
+                                    return "<i class=\"" + icon + " " + classIcon + "\"></i>";
+                                },
+                                export: function (column, row) {
+                                    var reportdate = $("#grid-search-results").data("export-params").DateFrom;
+                                    if (row.closed == 1) {
+                                        return '<a target="_blank" href="' + endpoint + 'ParcelShop/CloseShopExport?Type=closeshop&BranchType=all&BranchList=' + row.branchID + '&DateFrom=' + reportdate + '" class="btn btn-sm btn-default"><i class="ion-document-text"></i> Export</a>';
+                                    }
+                                    return '<button type="button" class="btn btn-sm btn-default" disabled><i class="ion-document-text"></i> Export</button>';
+                                }
+                            }
+                        })
+                        .on("loaded.rs.jquery.bootgrid", function () {
+                            $.pageLoader("hide");
+
+                            gridSearchResults.find('[data-toggle="tooltip"]').tooltip({
+                                container: "body",
+                            }).end();
+
+                            $(this).find("button[disabled]").parents("tr")
+                                //.addClass("bg-m-gray bg-m-lighten-3 text-m-gray").parents("tbody")
+                                .find('.select-box').prop("disabled", true).removeClass("select-box").addClass("select-box-disabled")
+                        })
+                        .on("selected.rs.jquery.bootgrid", function (e) {
+                            $(this).find(".select-box-disabled").parents("tr.active").removeClass("active")
+                        });
+
+                        $("#card-search-results").delay(500).fadeIn(300);
+                    }
+                    else {
+                        gridSearchResults.bootgrid("reload");
+                    }
+                }
+            });
+
+            // SUBMIT CONFIRM
+            // ======================
+            $("#form-confirm").validate({
+                submitHandler: function (form) {
+                    var $form = $(form),
+                        id = $form.data("row-id");
+
+                    var getVal = function (selector) {
+                        return parseFloat($form.find(selector).val().replace(/[^\d\.\-]/g, ""))
+                    }
+
+                    $.post(endpoint + "Confirm", {
+                        Branch: $form.find('input[name="Branch"]').val(),
+                        ReportDate: $form.find('input[name="ReportDate"]').val(),
+                        VerifyDate: $form.find('input[name="VerifyDate"]').val(),
+
+                        // Money
+                        Comm: getVal('input[name="Comm"]'),
+                        Other: getVal('input[name="Other"]'),
+                        Return: getVal('input[name="Return"]'),
+                        Suspensse: getVal('input[name="Suspensse"]'),
+                    }, function (response) {
+                        if (response.success) {
+                            $('#grid-search-results tr[data-row-id="' + id + '"]').remove();
+                            $('#modal-confirm').modal("hide");
+                            swal("Confirmed", response.messages[0], "success");
+                        }
+                        else {
+                            var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                            swal("Error", message, "error");
+                            return false;
+                        }
+                    });
+                }
+            });
+
+            // EXPORT
+            // ======================
+            $("body").on("click", '[data-ke-action="export"]', function (e) {
+                var $this = $(this),
+                    $target = $($this.data("ke-target")),
+                    params = $target.data("export-params"),
+                    filetype = $this.data("ke-filetype"),
+                    type = $this.data("ke-type");
+
+                if (typeof params === "undefined") {
+                    params = "";
+                }
+                else {
+                    var str = [];
+
+                    for (var p in params) {
+                        if (params.hasOwnProperty(p)) {
+                            str.push(encodeURIComponent(p) + "=" + encodeURIComponent(params[p]));
+                        }
+                    }
+                    params = "&" + str.join("&");
+                }
+
+                var redirectWindow = window.open(endpoint + "ParcelShop/CloseShopExport?FileType=" + filetype + params, '_blank');
+                redirectWindow.location;
+            });
+        });
+    </script>
+}
+
+<div class="block-header">
+    <h2 class="block-title">@ViewData["Title"]</h2>
+</div>
+
+@await Html.PartialAsync("Shared/_FormSearchPartial", ViewData)
+
+<div id="card-search-results" class="card" style="display: none;">
+    <div class="card-body table-responsive">
+        <div>
+            <table id="grid-search-results" class="table table-card table-condensed table-striped table-hover unordered">
+                <thead>
+                    <tr class="bg-m-amber bg-m-lighten-5">
+                        <th data-column-id="branchID" data-identifier="true">@Localizer["Branch ID"]</th>
+                        <th data-column-id="closed" data-type="numeric" data-formatter="status" data-header-css-class="text-right" data-css-class="text-right">@Localizer["Status"]</th>
+                        <th data-column-id="estCon" data-type="numeric" data-header-css-class="text-right" data-css-class="text-right">@Localizer["Est. Con"]</th>
+                        <th data-column-id="estBoxes" data-type="numeric" data-header-css-class="text-right" data-css-class="text-right">@Localizer["Est. Boxes"]</th>
+                        <th data-column-id="estRevenue" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right">@Localizer["Est. Revenue"]</th>
+                        <th data-column-id="closeDate" data-type="date">@Localizer["Close Date"]</th>
+                        <th data-column-id="closeBy" data-formatter="closeBy">@Localizer["Close By"]</th>
+                        <th data-column-id="export" data-formatter="export">@Localizer["Expoty"]</th>
+                        @*<th data-column-id="report_Date" data-type="dateS" data-visible="false">@SharedLocalizer["Report date"]</th>
+                        <th data-column-id="receipt" data-type="numeric" data-header-css-class="text-center" data-css-class="text-center">@Localizer["Receipt"]</th>
+                        <th data-column-id="freight" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right" data-visible="false">@Localizer["Freight"]</th>
+                        <th data-column-id="cod" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right" data-visible="false">@Localizer["COD"]</th>
+                        <th data-column-id="insur" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right" data-visible="false">@Localizer["Insur"]</th>
+                        <th data-column-id="pkg" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right" data-visible="false">@Localizer["Pkg"]</th>
+                        <th data-column-id="lineTopUp" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right">@Localizer["LineTopUp"]</th>
+                        <th data-column-id="cash" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right">@Localizer["Cash"]</th>
+                        <th data-column-id="rabbit" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right">@Localizer["Rabbit"]</th>
+                        <th data-column-id="credit" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right">@Localizer["Credit"]</th>
+                        <th data-column-id="linePay" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right">@Localizer["LinePay"]</th>
+                        <th data-column-id="total" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right">@SharedLocalizer["Total"]</th>
+                        <th data-column-id="city" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right" data-visible="false">@Localizer["City"]</th>
+                        <th data-column-id="cityn" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right" data-visible="false">@Localizer["Cityn"]</th>
+                        <th data-column-id="citys" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right" data-visible="false">@Localizer["Citys"]</th>
+                        <th data-column-id="grab" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right" data-visible="false">@Localizer["Grab"]</th>
+                        <th data-column-id="capturedDate" data-visible="false" data-visible-in-selection="false" data-type="datetimeS">@Localizer["CapturedDate"]</th>*@
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+        <div class="text-right m-r-15 m-b-15">
+            <button class="btn btn-primary" data-command="confirm-selection">Export Selection</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-confirm" class="modal modal-confirm fade " tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-fluid" role="document">
+        <form asp-controller="Confirm" asp-action="Index" method="post" id="form-confirm" class="form-horizontal">
+            <input asp-for="Branch" type="hidden" />
+            <input asp-for="ReportDate" type="hidden" />
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="row modal-title">
+                        <div class="col-md-6">
+                            <h4 class="modal-title">
+                                @Localizer["Confirm#"] <span data-column-id="b_id"></span>
+                                &nbsp;&nbsp;&nbsp;
+                                Report Date <span data-column-id="reportDate"></span>
+                            </h4>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="modal-title text-right">
+                                ยอดโอนทั้งสิ้น <span class="total-transfer" data-column-id="totalTransfer">-</span>
+                            </h4>
+                            @*<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>*@
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h3 class="confirm-title">Parcel Shop</h3>
+                            <div class="parcel-shop">
+                                <div class="row">
+                                    <div class="col-sm-6">
+
+                                        <div class="card">
+                                            <div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
+                                                <h2 class="card-title">รายละเอียดแยกตามบริการ</h2>
+                                            </div>
+                                            <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Freight</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="freight" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">COD</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="cod" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Insur</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="insur" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Package</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="package" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Sale Package</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="salePackage" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">LINEPay Top-Up</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="lineTopUp" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <hr />
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Total</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right total" data-column-id="totalService" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-sm-6">
+
+                                        <div class="card">
+                                            <div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
+                                                <h2 class="card-title">รายละเอียดการชำระเงิน</h2>
+                                            </div>
+                                            <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Cash</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="cash" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Rabit</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="rabbit" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Credit Card</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="credit" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">LINEPay</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="linePay" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+
+                                                <hr />
+
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Total</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right total" data-column-id="totalPayment" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="card">
+                                            <div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
+                                                <h2 class="card-title">รายละเอียดแยกตาม Surcharge</h2>
+                                            </div>
+                                            <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Transportation</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="transportation" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">VAS Surcharge</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="vasSurcharge" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Discount</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="discount" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Vat</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="vat" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+
+                                                <hr />
+
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Total</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right total" data-column-id="totalSurcharge" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h3 class="confirm-title">Bangkok Sameday</h3>
+                            <div class="bangkok-sameday">
+
+                                <div class="row">
+                                    <div class="col-sm-6">
+
+                                        <div class="card">
+                                            <div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
+                                                <h2 class="card-title">รายละเอียดแยกตาม Account</h2>
+                                            </div>
+                                            <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">CITY</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="city" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">CITYN</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="cityn" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">CITYS</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="citys" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">GRAB</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="grab" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+
+                                                <hr />
+
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Total</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right total" data-column-id="bsdTotalAccout" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-sm-6">
+
+                                        <div class="card">
+                                            <div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
+                                                <h2 class="card-title">รายละเอียดการชำระเงิน</h2>
+                                            </div>
+                                            <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Cash</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="bsdCash" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">LINEPay</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="bsdLinePay" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+
+                                                <hr />
+
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Total</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right total" data-column-id="bsdTotalPayment" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="card-body m-t-10 p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">LINE Top-Up (Cash)</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="bsdLineTopUp" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Total Cash</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right total" data-column-id="bsdTotalPaymentCash" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <h4 class="adjustment-title">Adjustment</h4>
+
+                                <div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Comm</label>
+                                        <div class="col-sm-9">
+                                            <input asp-for="Comm" type="text" class="form-control maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Other</label>
+                                        <div class="col-sm-9">
+                                            <input asp-for="Other" type="text" class="form-control maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Return</label>
+                                        <div class="col-sm-9">
+                                            <input asp-for="Return" type="text" class="form-control maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Suspensse</label>
+                                        <div class="col-sm-9">
+                                            <input asp-for="Suspensse" type="text" class="form-control maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                        </div>
+                                    </div>
+                                    @*<div class="form-group">
+                                            <label class="col-sm-3 control-label">Withholding Tax</label>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control maskmoney" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label">Promotion</label>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control maskmoney" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                            </div>
+                                        </div>*@
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Verify Date</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group-icon">
+                                                <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                                                <input asp-for="VerifyDate" class="form-control date-picker" data-mask="00/00/0000" value="@DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy", new CultureInfo("en-US"))" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-outline-primary">Confirm</button>
+                </div>
+            </div><!-- /.modal-content -->
+
+        </form>
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

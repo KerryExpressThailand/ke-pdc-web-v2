@@ -1,0 +1,202 @@
+﻿@{
+    ViewData["Title"] = "Download TUD Report";
+}
+
+@section links {
+    <link rel="stylesheet" href="~/lib/bootstrap-select/dist/css/bootstrap-select.css" />
+    <link rel="stylesheet" href="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.css" />
+    <link rel="stylesheet" href="~/assets/stylesheets/confirm.css" />
+}
+
+@section scripts {
+    <script src="~/lib/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.js"></script>
+    <script src="~/lib/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+    <script src="~/lib/jquery-maskmoney/dist/jquery.maskMoney.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/moment/min/moment-with-locales.min.js"></script>
+    <script src="~/lib/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/lib/bootstrap-tagsinput/dist/bootstrap-tagsinput.js"></script>
+    <script src="~/lib/matchheight/dist/jquery.matchHeight-min.js"></script>
+    <script src="~/assets/javascripts/bootstrap-select-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootgrid-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootstrap-datetimepicker.js"></script>
+    <script src="~/assets/javascripts/jquery.validation-default.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var decimalToString = function (value) {
+                return parseFloat(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            var numericToString = function (value) {
+                return parseInt(value).toLocaleString();
+            }
+
+
+            // FORM SEARCH
+            // ======================
+            var searchFirstTime = true;
+            var gridSearchResults;
+
+            $('[type=reset]').click(function (e) {
+                e.preventDefault();
+                $(this).closest('form').get(0).reset();
+                $("select").selectpicker('render');
+            });
+
+            $('[data-command="verify-all"]').click(function (e) {
+                e.preventDefault();
+                var checked = $("#grid-search-results tbody input:checked"),
+                    selected = [];
+
+                for (var i = 0; i < checked.length; i++) {
+                    selected.push(checked.eq(i).val());
+                }
+
+                if (selected.length == 0) {
+                    swal("Verify", "Please select the information to be verify!", "warning")
+                }
+                else {
+                    Verify(selected);
+                }
+            });
+
+            $('form[data-toggle="search"]').validate({
+                submitHandler: function (form) {
+                    $.pageLoader("show");
+                    var $form = $(form);
+
+                    if (searchFirstTime) {
+
+                        searchFirstTime = false;
+
+                        gridSearchResults = $("#grid-search-results").bootgrid({
+                            url: endpoint + "DCTopUpVerify/Download",
+                            requestHandler: function (request) {
+                                var BranchList = $form.find('select[name="BranchList"]').val(),
+                                    request = {
+                                        ReportDate: $form.find('input[name="ReportDate"]').val(),
+
+                                        // Pagination
+                                        page: request.current,
+                                        perPage: request.rowCount,
+                                        order: Object.keys(request.sort)[0],
+                                        direction: request.sort[Object.keys(request.sort)[0]],
+                                        searchPhrase: request.searchPhrase,
+                                    };
+
+                                $("#modalViewDetail").find('[data-column-id="MonthYear"]').html($form.find('input[name="MonthYear"]').val());
+                                $("#grid-search-results").data("export-params", request);
+
+                                return request;
+                            },
+                            sorting: false,
+                            templates: {
+                                header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static">@SharedLocalizer["Search Results"]</h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20"><buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-search-results">@SharedLocalizer["Export (Excel)"]</buttom><buttom class="btn btn-default hidden" data-ke-action="export" data-ke-filetype="pdf" data-ke-target="#grid-search-results"><i class="ion-document-text"></i> @SharedLocalizer["Export (PDF)"]</buttom></div></div></div></div>',
+                            },
+                            formatters: {
+                                verified: function (column, row) {
+                                    return row[column.id] == null ? "No" : "Yes";
+                                }
+                            }
+                        })
+                        .on("loaded.rs.jquery.bootgrid", function () {
+                            $.pageLoader("hide");
+
+                            $(this);
+
+                        })
+                        .on("selected.rs.jquery.bootgrid", function (e) {
+                            $(this).find(".select-box-disabled").parents("tr.active").removeClass("active")
+                        });
+
+                        $("#card-search-results, #card-search-status").delay(500).fadeIn(300);
+                    }
+                    else {
+                        gridSearchResults.bootgrid("reload");
+                    }
+                }
+            });
+
+            // EXPORT
+            // ======================
+            $("body").on("click", '[data-ke-action="export"]', function (e) {
+                var $this = $(this),
+                    $target = $($this.data("ke-target")),
+                    params = $target.data("export-params"),
+                    filetype = $this.data("ke-filetype"),
+                    type = $this.data("ke-type");
+
+                if (typeof params === "undefined") {
+                    params = "";
+                }
+                else {
+                    var str = [];
+
+                    for (var p in params) {
+                        if (params.hasOwnProperty(p)) {
+                            str.push(encodeURIComponent(p) + "=" + encodeURIComponent(params[p]));
+                        }
+                    }
+                    params = "&" + str.join("&");
+                }
+
+                var redirectWindow = window.open(endpoint + "DCTopUpVerify/Download?FileType=" + filetype + params, '_blank');
+                redirectWindow.location;
+            });
+        });
+    </script>
+}
+
+<div class="block-header">
+    <h2 class="block-title">@ViewData["Title"]</h2>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">@SharedLocalizer["Search"]</h2>
+    </div>
+    <div class="card-body card-padding">
+        <form data-toggle="search">
+            <div class="row">
+                <div class="col-sm-4 col-md-3">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Report date"]</label>
+                        <input name="ReportDate" id="SearchReportDate" class="form-control input-mask date-picker" data-mask="00/00/0000" value="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                    </div>
+                </div>
+                <div class="col-sm-4 col-md-3">
+                    <div class="form-group">
+                        <label class="control-label hidden-xs hidden-sm">&nbsp;</label>
+                        <div>
+                            <button type="reset" class="btn btn-default" data-toggle="tagsinput-clear" data-target="#form-search .tagsinput">@SharedLocalizer["Clear"]</button>
+                            <button type="submit" class="btn btn-primary btn-search">@SharedLocalizer["Search"]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="card-search-results" class="card" style="display:none;">
+    <div class="card-body table-responsive">
+        <div>
+            <table id="grid-search-results" class="table table-card table-bordered table-condensed table-hover unordered">
+                <thead>
+                    <tr>
+                        <th data-column-id="branchID" data-identifier="true" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["Branch"]</th>
+                        <th data-column-id="dmsid">@SharedLocalizer["DMSID"]</th>
+                        <th data-column-id="branch_type">@SharedLocalizer["Branch type"]</th>
+                        <th data-column-id="erP_ID">@SharedLocalizer["ERP ID"]</th>
+                        <th data-column-id="branchName">@SharedLocalizer["Branch name"]</th>
+                        <th data-column-id="reportDate" data-type="date">@SharedLocalizer["Report date"]</th>
+                        <th data-column-id="tud" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right">@SharedLocalizer["TUD Amount"]</th>
+                        <th data-column-id="tudVerifyDate" data-formatter="verified">@SharedLocalizer["Verified"]</th>
+                        <th data-column-id="tudVerifyBy">@SharedLocalizer["Verify by"]</th>
+                        <th data-column-id="tudVerifyDate" data-type="datetime">@SharedLocalizer["Verify date"]</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>

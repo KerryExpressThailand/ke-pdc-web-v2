@@ -1,0 +1,1 @@
+EXEC sp_SynRTSP07_GetCommisionFee N'<dbxml><req><date_from>20170920</date_from><date_to>20170926</date_to><project_id>PSP</project_id></req><profile><profile_id>ALL</profile_id></profile></dbxml>'

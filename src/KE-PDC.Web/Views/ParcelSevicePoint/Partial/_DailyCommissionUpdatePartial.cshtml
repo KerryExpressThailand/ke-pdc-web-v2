@@ -1,0 +1,49 @@
+﻿@using KE_PDC.ViewModel.ServicePoint
+@model ServicePointDaliyUpdateViewModel
+
+<div id="modal-update" class="modal modal-update fade " tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <form asp-controller="DailyCommissionVerify" asp-action="Index" method="post" id="form-update">
+            <input asp-for="ProfileId" type="hidden" />
+            <input asp-for="ReportDate" type="hidden" />
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="row modal-title">
+                        <h4 class="modal-title">
+                            @SharedLocalizer["Profile ID"]# <span data-id="profileId"></span>
+                            &nbsp;&nbsp;&nbsp;
+                            Report Date <span data-id="reportDate"></span>
+                        </h4>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="inputConsignment" class="control-label">Consignment</label>
+                                <input asp-for="Consignment" class="form-control" id="inputConsignment" placeholder="Consignment" data-id="consignment">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="inputBoxes" class="control-label">Boxes</label>
+                                <input asp-for="Boxes" class="form-control" id="inputBoxes" placeholder="Boxes" data-id="boxes">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="inputCash" class="control-label">Cash</label>
+                                <input asp-for="Cash" class="form-control" id="inputCash" placeholder="Cash" data-id="cash">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-outline-primary">@SharedLocalizer["Update"]</button>
+                </div>
+            </div><!-- /.modal-content -->
+
+        </form>
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

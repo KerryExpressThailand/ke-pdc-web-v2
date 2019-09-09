@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <AssemblyName>KE_PDC.Services</AssemblyName>
+    <RootNamespace>KE_PDC.Services</RootNamespace>
+    <Version>1.1.0</Version>
+    <Authors>Chettapong Pinsuwan</Authors>
+    <Company>Kerry Express (Thailand) Limited.</Company>
+    <Product>Kerry Express - POS Data Center - Services</Product>
+    <Copyright>2017 Kerry Express (Thailand) Limited.</Copyright>
+    <PackageProjectUrl>http://th.pos.kerryexpress.com/PDC</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/chettapong/KE-PDC</RepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" Version="2.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.0" />
+  </ItemGroup>
+
+</Project>

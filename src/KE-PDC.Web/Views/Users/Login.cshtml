@@ -1,0 +1,238 @@
+﻿@model LoginViewModel
+
+@{
+    var InvalidState = Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Invalid;
+    ViewData["Title"] = "Login";
+    Layout = "";
+}
+@inject IOptions<AppSettings> AppSettings
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    @{ var title = ViewData.ContainsKey("Title") ? @ViewData["Title"] + " - " : ""; }
+    <title>@Html.Raw(@title + @AppSettings.Value.SiteTitle)</title>
+
+    @*<link rel="stylesheet" href="~/lib/" />*@
+
+    <link rel="stylesheet" href="~/assets/stylesheets/app.css" />
+    <link rel="stylesheet" href="~/assets/stylesheets/login.css" />
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+        <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <link rel="icon" href="~/favicon.ico" type="image/ico" />
+    <link rel="shortcut icon" href="~/favicon.ico" />
+    <style>
+        iframe {
+            border: none;
+        }
+    </style>
+    <style>
+        .modal {
+          position: fixed;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          overflow: hidden;
+        }
+        .modal-dialog {
+          position: fixed;
+          margin: 0;
+          width: 100%;
+          height: 100%;
+          padding: 0;
+        }
+        .modal-content {
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          border: 2px solid #3c7dcf;
+          border-radius: 0;
+          box-shadow: none;
+        }
+        
+        .modal-title {
+          font-weight: 300;
+          font-size: 2em;
+          color: #fff;
+          line-height: 30px;
+        }
+        .modal-body {
+          position: absolute;
+          top: 30px;
+          bottom: 30px;
+          width: 100%;
+          font-weight: 300;
+          overflow-y: auto;
+        }
+        .modal-footer {
+          position: absolute;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          height: 45px;
+          padding: 8px;
+          background: #f1f3f5;
+        }
+       
+
+    </style>
+    <!-- Google Tag Manager -->
+    <script>
+        (function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-N9RNWDH');
+    </script>
+    boss chayatat
+    <!-- End Google Tag Manager -->
+</head>
+<body>
+    <div class="login-bg"></div>
+    <div class="login">
+        <div class="container">
+            <div class="login-logo">
+                <img src="~/assets/images/kerry-express-logo.png" />
+            </div>
+            <div class="row">
+                <div class="login-col col-sm-6 login-logo-app">
+                    <img src="~/assets/images/logo-project.png" />
+                </div>
+
+                <div class="login-col col-sm-6 col-md-5 col-lg-4 login-form">
+                    <div class="login-form-wrapper">
+                        @if (ViewData.ModelState.GetFieldValidationState("failed") == InvalidState)
+                        {
+                            <div class="alert alert-danger alert-dismissible" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <strong>Oops!!!</strong> @ViewData.ModelState["failed"].Errors.FirstOrDefault().ErrorMessage
+                                @if (ViewBag.page != null)
+                                {<a data-toggle="modal" data-target="#myModal" class="openpop" href="@ViewBag.page" style="color:#fff; text-decoration:underline">"<b>@ViewBag.word</b>"</a> @ViewBag.word_01}
+                            </div>
+                        }
+
+                        <form asp-controller="Users" asp-action="Login" asp-route-returnurl="@ViewBag.ReturnUrl" method="post">
+                            <div class="form-group@(ViewData.ModelState.GetFieldValidationState("Username") == InvalidState ? " has-error  has-feedback":"" )">
+                                <input asp-for="Username" class="form-control" placeholder="Username" />
+                                @if (ViewData.ModelState.GetFieldValidationState("Username") == InvalidState)
+                                {
+                                    <span class="ion-close form-control-feedback" aria-hidden="true"></span>
+                                    <span asp-validation-for="Username" class="help-block"></span>
+                                }
+                            </div>
+                            <div class="form-group@(ViewData.ModelState.GetFieldValidationState("Password") == InvalidState ? " has-error  has-feedback":"" )">
+                                <input asp-for="Password" class="form-control" placeholder="Password" />
+                                @if (ViewData.ModelState.GetFieldValidationState("Password") == InvalidState)
+                                {
+                                    <span class="ion-close form-control-feedback" aria-hidden="true"></span>
+                                    <span asp-validation-for="Password" class="help-block"></span>
+                                }
+                            </div>
+                            <div class="form-group@(ViewData.ModelState.GetFieldValidationState("Option") == InvalidState ? " has-error  has-feedback":"" )">
+                                <select class="form-control" asp-for="option" style="margin-bottom:10PX">
+                                    <option value="ssgn">Single Sign-on</option>
+                                    <option value="pdc">PDC</option>
+
+                                </select>
+                                @if (ViewData.ModelState.GetFieldValidationState("Option") == InvalidState)
+                                {
+                                    <span class="ion-close form-control-feedback" aria-hidden="true"></span>
+                                    <span asp-validation-for="option" class="help-block"></span>
+                                }
+                            </div>
+                            <div class="form-group">
+                                <button class="btn btn-block btn-primary">@Localizer["Login"]</button>
+                            </div>
+                            @if (ViewBag.pass != null)
+                            {
+                                <div class="text-right">
+                                    <a asp-controller="Users" asp-action="ForgotPassword">Forgot Password ?</a>
+                                </div>
+                            }
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="modal fade" id="myModal" role="dialog">
+                <div class="modal-dialog modal-lg">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            <iframe src="" style="width:100%; height:100%"></iframe>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" id="closed" class="btn btn-danger" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+   
+    
+
+
+    <!-- Library -->
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/jquery.cookie/jquery.cookie.js"></script>
+
+    <!-- Framework -->
+    <script src="~/assets/javascripts/app.min.js"></script>
+    <script src="~/assets/javascripts/ke-framework.js"></script>
+
+    <!-- Initialization -->
+    <script src="~/assets/javascripts/init.js" asp-append-version="true"></script>
+
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N9RNWDH"
+                height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <script>
+        $("#closed").click(function () {
+             window.location = 'Login';
+        });
+        // popup examples
+        $(document).ready(function () {
+        $(".popupVideo").hide();
+            $(".openpop").click(function (e) {
+
+            e.preventDefault();
+            $("iframe").attr("src", $(this).attr('href'));
+            $(".links").fadeOut('slow');
+            $(".popup").fadeIn('slow');
+            $('.close').fadeIn('slow');
+        });
+
+        $(".close").click(function () {
+            $(this).parent().fadeOut("slow");
+            $(".links").fadeIn("slow");
+        });
+
+
+
+    });
+    </script>
+</body>
+</html>

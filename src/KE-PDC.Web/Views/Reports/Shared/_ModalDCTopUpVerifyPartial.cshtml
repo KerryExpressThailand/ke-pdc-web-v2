@@ -1,0 +1,183 @@
+@model DCTopUpVerifyViewModel
+
+<div id="modalVerify" class="modal fade " tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <form asp-controller="Confirm" asp-action="Index" method="post" id="form-detail">
+            <input asp-for="ReportDate" type="hidden" />
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Verify #<span data-column-id="erP_ID"></span> - <span data-column-id="branchID"></span></h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@SharedLocalizer["Report date"]</label>
+                                <p class="form-control-static" data-column-id="reportDate">-</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@SharedLocalizer["TUD"]</label>
+                                <p class="form-control-static" data-column-id="tud">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@SharedLocalizer["Verify date"]</label>
+                                <input asp-for="VerifyDate" class="form-control date-picker" data-mask="00/00/0000" value="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))" placeholder="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@SharedLocalizer["Remittance date"]</label>
+                                <input asp-for="RemittanceDate" class="form-control date-picker" data-mask="00/00/0000" value="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))" placeholder="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row hidden">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Bonus Commission"]</label>
+                                <input asp-for="BonusCommission" class="form-control maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Bonus Commission Remark"]</label>
+                                <input asp-for="BonusCommissionRemark" class="form-control remark" placeholder="Remark">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Adjustment CreditCard"]</label>
+                                <input asp-for="AdjustmentCreditCard" class="form-control maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Adjustment CreditCard Remark"]</label>
+                                <input asp-for="AdjustmentCreditCardRemark" class="form-control remark" placeholder="Remark">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Adjustment Other"]</label>
+                                <input asp-for="AdjustmentOther" class="form-control maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Adjustment Other Remark"]</label>
+                                <input asp-for="AdjustmentOtherRemark" class="form-control remark" placeholder="Remark">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Return Charge"]</label>
+                                <input asp-for="ReturnCharge" class="form-control maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Return Charge Remark"]</label>
+                                <input asp-for="ReturnChargeRemark" class="form-control remark" placeholder="Remark">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Suspensse"]</label>
+                                <input asp-for="Suspense" class="form-control maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Suspensse Remark"]</label>
+                                <input asp-for="SuspenseRemark" class="form-control remark" placeholder="Remark">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Withholding Tax"]</label>
+                                <input asp-for="WithHoldingTax" class="form-control maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Withholding Tax Remark"]</label>
+                                <input asp-for="WithHoldingTaxRemark" class="form-control remark" placeholder="Remark">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Promotion"]</label>
+                                <input asp-for="Promotion" class="form-control maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Promotion Remark"]</label>
+                                <input asp-for="PromotionRemark" class="form-control remark" placeholder="Remark">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Bank Charge"]</label>
+                                <input asp-for="BankCharge" class="form-control maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Bank Charge Remark"]</label>
+                                <input asp-for="BankChargeRemark" class="form-control remark" placeholder="Remark">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Adjustment LinePay"]</label>
+                                <input asp-for="AdjustmentLinePay" class="form-control maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>@Localizer["Adjustment LinePay Remark"]</label>
+                                <input asp-for="AdjustmentLinePayRemark" class="form-control remark" placeholder="Remark">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-outline-primary">Verify</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </form>
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

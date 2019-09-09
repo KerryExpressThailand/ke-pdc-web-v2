@@ -1,0 +1,23 @@
+#Retail Friend [Management Free & Adjustment][Service Free IT]
+User: friend
+Pass: 1234
+
+#Retail DHL
+User: rtdhl
+Pass: 1234
+
+#Retail Setup [Service Free Supply]
+User: setup
+Pass: 1234
+
+#Accounting [Facility]
+User: n/a
+Pass: n/a
+
+#OPS Admin [Sales Package]
+User: opsadmin
+Pass: 1234
+
+#Franchise
+User: fc0001, fc0002, fc000n
+Pass: 1234

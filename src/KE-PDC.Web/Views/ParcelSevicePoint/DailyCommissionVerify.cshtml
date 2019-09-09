@@ -1,0 +1,408 @@
+﻿@using KE_PDC.ViewModel.ServicePoint
+@using KE_PDC.Models.SevicePoint
+@model ServicePointDaliyGetViewModel
+
+@{
+    List<ProfileMaster> ProfileMasterList = ViewData["ProfileMaster"] as List<ProfileMaster>;
+    ViewData["Title"] = "Parcel Sevice Point Daily Commission Verify";
+}
+
+@section links {
+    <link rel="stylesheet" href="~/lib/bootstrap-select/dist/css/bootstrap-select.css" />
+    <link rel="stylesheet" href="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.css" />
+    <link rel="stylesheet" href="~/assets/vendor/thbank-font/css/thbanklogos.min.css" />
+    <link rel="stylesheet" href="~/assets/stylesheets/confirm.css" />
+}
+
+@section scripts {
+    <script src="~/lib/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.js"></script>
+    <script src="~/lib/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+    <script src="~/lib/jquery-maskmoney/dist/jquery.maskMoney.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/moment/min/moment-with-locales.min.js"></script>
+    <script src="~/lib/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/lib/bootstrap-tagsinput/dist/bootstrap-tagsinput.js"></script>
+    <script src="~/lib/matchheight/dist/jquery.matchHeight-min.js"></script>
+    <script src="~/assets/javascripts/bootstrap-select-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootgrid-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootstrap-datetimepicker.js"></script>
+    <script src="~/assets/javascripts/jquery.validation-default.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            // FORM SEARCH
+            // ======================
+            var searchFirstTime = true;
+            var gridSearchResults;
+
+            $('form[data-toggle="search"]').each(function () {
+                $(this).validate({
+                    submitHandler: function (form) {
+                        $.pageLoader("show");
+
+                        if (searchFirstTime) {
+
+                            searchFirstTime = false;
+
+                            gridSearchResults = $("#grid-search-results").bootgrid({
+                                url: endpoint + "ParcelSevicePoint/DailyCommissionVerify/Get",
+                                ajaxSettings: {
+                                    method: "POST",
+                                    cache: false
+                                },
+                                requestHandler: function (request) {
+                                    $form = $('[data-toggle="search"]');
+                                    var ProfileIds = $form.find('select[name="ProfileIds"]').selectpicker('val'),
+                                        request = {
+                                            ProfileIds: typeof ProfileIds == "object" ? ProfileIds.join(",") : ProfileIds,
+                                            DateFrom: $form.find('input[name="DateFrom"]').val() || "@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))",
+                                            DateTo: $form.find('input[name="DateTo"]').val() || "@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))",
+                                            Status: $form.find('input[name="Status"]').val(),
+
+                                            // Pagination
+                                            page: request.current,
+                                            perPage: request.rowCount,
+                                            order: Object.keys(request.sort)[0],
+                                            direction: request.sort[Object.keys(request.sort)[0]],
+                                            searchPhrase: request.searchPhrase,
+                                        };
+
+                                    $("#grid-search-results").data("export-params", request);
+
+                                    return request;
+                                },
+                                sorting: false,
+                                selection: true,
+                                multiSelect: true,
+                                templates: {
+                                    header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static">@SharedLocalizer["Search Results"]</h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20"><buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-search-results">@SharedLocalizer["Export (Excel)"]</buttom></div></div></div></div>',
+                                },
+                                formatters: {
+                                    commands: function (column, row) {
+                                        return '<button class="btn btn-xs btn-' + (row.verified ? 'default' : 'outline-warning') + '" data-command="edit" data-row-profile-id="' + row.profileId + '" data-row-report-date="' + row.reportDate + '"' + (row.verified ? ' disabled' : '') + '><i class="ion-edit"></i> @SharedLocalizer["Edit"]</button>'
+                                            + ' <button class="btn btn-xs btn-' + (row.verified ? 'default' : 'outline-success') + '" data-command="verify" data-row-profile-id="' + row.profileId + '" data-row-report-date="' + row.reportDate + '"' + (row.verified ? ' disabled' : '') + '><i class="ion-checkmark-round"></i> @SharedLocalizer["Verify"]</button>';
+                                    },
+                                    status: function (column, row) {
+                                        if (row.verified) {
+                                            return '<div data-id="verify-status" class="text-success"><i class="ion-checkmark-round"></i> Verified</div>';
+                                        }
+                                        return '<div data-id="verify-status" class="text-warning"><i class="ion-alert-circled"></i> Pending</div>';
+                                    }
+                                }
+                            }).on("loaded.rs.jquery.bootgrid", function () {
+                                $.pageLoader("hide");
+
+                                $(this).find('[data-command="verify"][disabled]').parents("tr")
+                                    .addClass("bg-m-gray bg-m-lighten-3 text-m-gray")//.parents("tbody")
+                                    .find('.select-box').prop("disabled", true).removeClass("select-box").addClass("select-box-disabled");
+
+                                $(this).find('[data-command="verify"]').on("click", function () {
+                                    var that = this,
+                                        profileId = $(this).data("row-profile-id"),
+                                        reportDate = $(this).data("row-report-date"),
+                                        id = profileId + '-' + moment(reportDate).format("YYYYMMDD");
+                                    swal({
+                                        title: "Are you sure?",
+                                        text: "Confirm this information to be recorded",
+                                        type: "warning",
+                                        showCancelButton: true,
+                                        closeOnConfirm: false,
+                                        showLoaderOnConfirm: true,
+                                        confirmButtonClass: "btn-outline-primary",
+                                        confirmButtonText: "Yes, confirm it!",
+                                    }, function () {
+                                        $.post(endpoint + "ParcelSevicePoint/DailyCommissionVerify", {
+                                            Profile: [{
+                                                ProfileId: profileId,
+                                                ReportDate: moment(reportDate).format("YYYYMMDD")
+                                            }],
+                                        }, function (response) {
+                                            console.log(response);
+                                            if (response.success) {
+                                                gridSearchResults.find('tr[data-row-id="' + id + '"]')
+                                                    .addClass("bg-m-gray bg-m-lighten-3 text-m-gray").removeClass("active")
+                                                    .find(".select-box").prop("disabled", true).prop("checked", false).removeClass("select-box").addClass("select-box-disabled")
+                                                    .end().find('[data-command="edit"], [data-command="verify"]').prop("disabled", true).removeClass("btn-outline-warning btn-outline-success").addClass("btn-default")
+                                                    .end().find('td [data-id="verify-status"]').parent('td').html('<div data-id="verify-status" class="text-success"><i class="ion-checkmark-round"></i> Verified</div>');
+                                                swal("Verified", response.messages[0], "success");
+                                            }
+                                            else {
+                                                var message = response.messages.length > 0 ? response.messages[0] : (response.errors.length > 0 ? response.errors[0].message : 'Something went wrong');
+                                                swal("Error", message, "error");
+                                                return false;
+                                            }
+                                        }).fail(function (response) {
+                                            if (response.status == 404) {
+                                                swal("@Localizer["Not found"]", "@Localizer["Not found data in EasyShip"]", "info");
+                                            }
+                                            else {
+                                                swal("Error", response.statusText, "error");
+                                            }
+                                        });
+                                    });
+                                }).end().find('[data-command="edit"]').on("click", function () {
+                                    var that = this,
+                                        profileId = $(this).data("row-profile-id"),
+                                        reportDate = $(this).data("row-report-date");
+
+                                    $.pageLoader("show");
+
+                                    $("#form-edit").data("row-profile-id", profileId).data("row-report-date", reportDate);
+
+                                    $.post(endpoint + "ParcelSevicePoint/DailyCommissionVerify/Get", {
+                                        ProfileIds: profileId,
+                                        DateFrom: moment(reportDate).format("DD/MM/YYYY"),
+                                        DateTo: moment(reportDate).format("DD/MM/YYYY"),
+                                        page: 1,
+                                        perPage: 1,
+                                    }, function (response) {
+                                        if (response.success) {
+                                            var result = response.result[0];
+
+                                            $('#modal-update [data-id="profileId"]').text(profileId);
+                                            $('#modal-update [data-id="reportDate"]').text(moment(reportDate).format("DD/MM/YYYY"));
+                                            $('#modal-update [name="ProfileId"]').val(profileId);
+                                            $('#modal-update [name="ReportDate"]').val(moment(reportDate).format("YYYYMMDD"));
+                                            $('#modal-update [data-id="consignment"]').val(result.consignment);
+                                            $('#modal-update [data-id="boxes"]').val(result.boxes);
+                                            $('#modal-update [data-id="cash"]').val(result.cash);
+                                            $('#modal-update').modal('show');
+                                        }
+                                        else {
+                                            var message = response.messages.length > 0 ? response.messages[0] : (response.errors.length > 0 ? response.errors[0].message : 'Something went wrong');
+                                            swal("Error", message, "error");
+                                            return false;
+                                        }
+                                    }).always(function (response) {
+                                        $.pageLoader("hide");
+                                    });
+                                });
+                            }).on("selected.rs.jquery.bootgrid", function (e) {
+                                $(this).find(".select-box-disabled").parents("tr.active").removeClass("active")
+                            });
+
+                            $("#card-search-results, #card-search-status").delay(500).fadeIn(300);
+                        }
+                        else {
+                            gridSearchResults.bootgrid("reload");
+                        }
+                    }
+                });
+            });
+
+            $('[data-command="verify-select"]').on("click", function (e) {
+                e.preventDefault();
+                var checked = $("#grid-search-results tbody input:checked"),
+                    rowIds = [],
+                    profileList = [];
+
+                for (var i = 0; i < checked.length; i++) {
+                    var id = checked.eq(i).val().split('-');
+                    rowIds.push(checked.eq(i).val());
+                    profileList.push({
+                        ProfileId: id[0],
+                        ReportDate: id[1]
+                    });
+                }
+
+                if (profileList.length == 0) {
+                    swal("Confirm Select", "Please select the information to be updated!", "warning")
+                }
+                else {
+                    swal({
+                        title: "Are you sure?",
+                        text: "Confirm this select to be recorded",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonClass: "btn-outline-primary",
+                        confirmButtonText: "Yes, Confirm it!",
+                        closeOnConfirm: false
+                    }, function () {
+                        $.post(endpoint + "ParcelSevicePoint/DailyCommissionVerify", {
+                            Profile: profileList
+                        }, function (response) {
+                            if (response.success) {
+                                $.each(rowIds, function (index, value) {
+                                    $('#grid-search-results tr[data-row-id="' + value + '"]')
+                                        .addClass("bg-m-gray bg-m-lighten-3 text-m-gray").removeClass("active")
+                                        .find(".select-box").prop("disabled", true).prop("checked", false).removeClass("select-box").addClass("select-box-disabled")
+                                        .end().find('[data-command="edit"], [data-command="verify"]').prop("disabled", true).removeClass("btn-outline-warning btn-outline-success").addClass("btn-default")
+                                        .end().find('td [data-id="verify-status"]').parent('td').html('<div data-id="verify-status" class="text-success"><i class="ion-checkmark-round"></i> Verified</div>');
+                                });
+
+                                swal("Confirmed", response.messages[0], "success");
+                            }
+                            else {
+                                var message = response.messages.length > 0 ? response.messages[0] : (response.errors.length > 0 ? response.errors[0].message : 'Something went wrong');
+                                swal("Error", message, "error");
+                                return false;
+                            }
+                        });
+                    });
+                }
+            });
+
+            $('#form-update').validate({
+                submitHandler: function (form) {
+                    $form = $(form);
+
+                    swal({
+                        title: "Are you sure?",
+                        text: "Confirm this information to be updated",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonClass: "btn-outline-primary",
+                        confirmButtonText: "Yes, confirm it!",
+                        closeOnConfirm: false,
+                        showLoaderOnConfirm: true,
+                    }, function () {
+                        $.ajax({
+                            url: endpoint + "ParcelSevicePoint/DailyCommissionVerify",
+                            type: 'PUT',
+                            data: new FormData($form.get(0)),
+                            cache: false,
+                            contentType: false,
+                            processData: false
+                        }).done(function (response) {
+                            if (response.success) {
+                                var result = response.result;
+
+                                $("#grid-search-results").bootgrid('reload');
+                                $('#modal-update').modal('hide');
+                                swal("Updated", response.messages[0], "success");
+                            }
+                            else {
+                                var message = response.messages.length > 0 ? response.messages[0] : (response.errors.length > 0 ? response.errors[0].message : 'Something went wrong');
+                                swal("Error", message, "error");
+                            }
+                        }).fail(function (response) {
+                            swal("Error", response.statusText, "error");
+                        }).always(function (response) {
+                            $.pageLoader('hide');
+                        });
+                    });
+                }
+            });
+
+
+
+            // EXPORT
+            // ======================
+            $("body").on("click", '[data-ke-action="export"]', function (e) {
+                var $this = $(this),
+                    $target = $($this.data("ke-target")),
+                    params = $target.data("export-params"),
+                    filetype = $this.data("ke-filetype");
+
+                params.Excel = true;
+
+                var form = $('<form/>');
+                form.attr('action', endpoint + 'ParcelSevicePoint/DailyCommissionVerify/Get').attr('method', 'POST').attr('target', '_blank');
+
+                $.each(params, function (k, v) {
+                    if (typeof v !== 'undefined') {
+                        $(form).append($('<input name="' + k + '" value="' + v + '" type="hidden">'));
+                    }
+                });
+
+                $('body').append(form);
+
+                form.submit();
+                form.remove();
+            });
+        });
+    </script>
+}
+
+<div class="block-header">
+    <h2 class="block-title">@ViewData["Title"]</h2>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">@SharedLocalizer["Search"]</h2>
+    </div>
+    <div class="card-body card-padding">
+        <form data-toggle="search">
+            <div class="row">
+                <div class="col-xs-12 col-md-6 col-lg-5">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Profile"]</label>
+                        <select asp-for="ProfileIds" class="selectpicker" multiple data-live-search="true" data-actions-box="true" data-width="100%">
+                            @foreach (ProfileMaster profile in ProfileMasterList)
+                            {
+                                <option data-subtext="@profile.ProfileName" data-tokens="@profile.ProfileId @profile.ProfileName">@profile.ProfileId</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-4 col-md-2">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Date from"]</label>
+                        <div class="input-group-icon">
+                            <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                            <input asp-for="DateFrom" class="form-control date-picker input-mask" data-mask="00/00/0000" value="@DateTime.Now.ToString(" dd/MM/yyyy", new CultureInfo("en-US"))">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4 col-md-2">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Date to"]</label>
+                        <div class="input-group-icon">
+                            <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                            <input asp-for="DateTo" class="form-control date-picker input-mask" data-mask="00/00/0000" value="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                        </div>
+                    </div>
+                </div>
+                @*<div class="col-sm-4 col-md-3">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Status"]</label>
+                        <select asp-for="Status" class="selectpicker" data-width="100%" data-live-search="true" title="@SharedLocalizer["Select status"]" required>
+                            <option value="-1" selected>@SharedLocalizer["All status"]</option>
+                            <option value="pending">@SharedLocalizer["Pending"]</option>
+                            <option value="verified">@SharedLocalizer["Verified"]</option>
+                        </select>
+                    </div>
+                </div>*@
+                <div class="col-sm-4 col-md-1">
+                    <div class="form-group">
+                        <label class="control-label hidden-xs">&nbsp;</label>
+                        <div>
+                            <button type="submit" class="btn btn-primary btn-search">@SharedLocalizer["Search"]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="card-search-results" class="card" style="display:none;">
+    <div class="card-body table-responsive">
+        <div>
+            <table id="grid-search-results" class="table table-card table-bordered table-condensed table-hover unordered">
+                <thead>
+                    <tr>
+                        <th data-identifier="true" data-visible="false" data-visible-in-selection="false" data-column-id="id">ID</th>
+                        <th data-header-css-class="bg-m-blue bg-m-lighten-4" data-css-class="bg-m-blue bg-m-lighten-5" data-visible-in-selection="false" data-column-id="profileId">Profile ID</th>
+                        <th data-header-css-class="bg-m-blue bg-m-lighten-4" data-css-class="bg-m-blue bg-m-lighten-5" data-visible-in-selection="false" data-column-id="reportDate" data-type="date">@SharedLocalizer["Report date"]</th>
+                        <th data-header-css-class="bg-m-orange bg-m-lighten-5" data-visible-in-selection="false" data-column-id="command" data-formatter="commands">@Localizer["Command"]</th>
+                        <th data-header-css-class="bg-m-orange bg-m-lighten-5" data-visible-in-selection="false" data-column-id="status" data-formatter="status">@Localizer["Status"]</th>
+                        <th data-header-css-class="bg-m-orange bg-m-lighten-5" data-column-id="profileName">@SharedLocalizer["Profile Name"]</th>
+                        <th data-header-css-class="bg-m-orange bg-m-lighten-5" data-column-id="branchId">@SharedLocalizer["Branch"]</th>
+                        <th data-header-css-class="bg-m-orange bg-m-lighten-5" data-align="right" data-header-align="right" data-column-id="consignment" data-type="number">@Localizer["Consignment"]</th>
+                        <th data-header-css-class="bg-m-orange bg-m-lighten-5" data-align="right" data-header-align="right" data-column-id="boxes" data-type="number">@Localizer["Boxes"]</th>
+                        <th data-header-css-class="bg-m-orange bg-m-lighten-5" data-align="right" data-header-align="right" data-column-id="cash" data-type="decimal">@Localizer["Cash"]</th>
+                        <th data-header-css-class="bg-m-orange bg-m-lighten-5" data-align="right" data-header-align="right" data-column-id="commission" data-type="decimal">@Localizer["Commission"]</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        <div class="m-l-15 m-r-15 m-b-15">
+            <button class="btn btn-primary" data-command="verify-select">Verify Selection</button>
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("Partial/_DailyCommissionUpdatePartial")

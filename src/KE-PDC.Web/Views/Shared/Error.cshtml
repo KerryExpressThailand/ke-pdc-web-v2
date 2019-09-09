@@ -1,0 +1,34 @@
+﻿@{
+    Layout = "_LayoutError";
+
+    int Code = Model ?? Context.Response.StatusCode;
+    string StatusCode = "Oops!";
+    string StatusTitle = "Something went wrong";
+    string StatusDesc = "An error occurred while processing your request.";
+
+    switch (Code)
+    {
+        case 401:
+            StatusCode = "401";
+            StatusTitle = "Unauthorized";
+            StatusDesc = "The request has not been applied because it lacks valid authentication credentials for the target resource.";
+            break;
+        case 403:
+            StatusCode = "403";
+            StatusTitle = "Forbidden";
+            StatusDesc = "The server understood the request but refuses to authorize it.";
+            break;
+        case 404:
+            StatusCode = "404";
+            StatusTitle = "Not found";
+            StatusDesc = "The origin server did not find a current representation for the target resource or is not willing to disclose that one exists.";
+            break;
+    }
+
+    ViewData["Title"] = $"{StatusCode.ToString()} {StatusTitle}";
+}
+
+<h1 class="error-status-code">@StatusCode.ToString()</h1>
+<h2 class="error-status-title">@StatusTitle</h2>
+<p class="error-status-desc">@StatusDesc</p>
+<a class="error-status-link" href="~/">&larr; Go home</a>

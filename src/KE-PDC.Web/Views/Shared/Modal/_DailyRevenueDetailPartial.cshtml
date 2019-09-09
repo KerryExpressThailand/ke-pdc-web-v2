@@ -1,0 +1,761 @@
+﻿@model DailyRevenueDetailViewModel
+
+@{
+    string text = ViewData["Action"].Equals("verify") ? "Verify" : "Update";
+    DateTime now = DateTime.Now;
+    DateTime maxDate = now;
+    DayOfWeek dayOfWeek = now.DayOfWeek;
+    if(dayOfWeek == DayOfWeek.Monday && dayOfWeek == DayOfWeek.Tuesday)
+    {
+        maxDate = now.AddDays(3);
+    }
+    else if (dayOfWeek == DayOfWeek.Saturday )
+    {
+        maxDate = now.AddDays(4);
+    }
+    else
+    {
+        maxDate = now.AddDays(5);
+    }
+    string maxDateStr = maxDate.ToString("dd/MM/yyyy", new CultureInfo("en-US"));
+}
+<div id="modal-confirm" class="modal modal-confirm fade " tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-fluid" role="document">
+        <form asp-controller="Confirm" asp-action="Index" method="post" id="form-detail" class="form-horizontal" data-type="@ViewData["Action"]">
+            <input asp-for="Branch" type="hidden"  />
+            <input asp-for="ReportDate" type="hidden"   />
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="row modal-title">
+                        <div class="col-md-6">
+                            <h4 class="modal-title">
+                                @SharedLocalizer["Branch"] #<span data-column-id="erP_ID"></span> - <span data-column-id="branchID"></span>
+                                &nbsp;&nbsp;&nbsp;
+                                Report Date <span data-column-id="reportDate"></span>
+                            </h4>
+                        </div>
+                        @if (!ViewData["Action"].Equals("verify") && !ViewData["Action"].Equals("confirm"))
+                        {
+                            <div class="col-md-6">
+                                <h4 class="modal-title text-right">
+                                    ยอดโอนทั้งสิ้น <span class="total-transfer" data-column-id="totalTransfer">-</span>
+                                </h4>
+                                @*<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>*@
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h3 class="confirm-title">Parcel Shop</h3>
+                            <div class="parcel-shop">
+                                <div class="row">
+                                    <div class="col-sm-6">
+
+                                        @* รายละเอียดแยกตามบริการ *@
+                                        <div class="card">
+                                            <div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
+                                                <h2 class="card-title">รายละเอียดแยกตามบริการ</h2>
+                                            </div>
+                                            <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Freight</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="freight" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">COD</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="cod" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Insurance</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="insur" data-verify="verifyInsurance" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Package</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="package" data-verify="verifyPackage" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Sale Package</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="salePackage" data-verify="verifySalePackage" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">LINEPay Top-Up</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="lineTopUp" data-verify="verifyLineTopUp" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Discount</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="discount" data-verify="verifyDiscount" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <hr />
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Total</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right total" data-column-id="totalService" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="card">
+                                            <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Total Shipments</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="totalCon" data-verify="verifyShipments" data-type="numeric">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Total Boxes</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="totalBoxes" data-verify="verifyBoxes" data-type="numeric">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Drop-off Boxes</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right m-b-0" data-column-id="totalDropOffBoxes" data-verify="verifyDropoffBoxes" data-type="numeric">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-sm-6">
+
+                                        @* รายละเอียดการชำระเงิน *@
+                                        <div class="card">
+                                            <div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
+                                                <h2 class="card-title">รายละเอียดการชำระเงิน</h2>
+                                            </div>
+                                            <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Cash</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="cash" data-type="decimal" data-verify="verifyCash">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Rabit</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="rabbit" data-type="decimal" data-verify="verifyRabbit">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Credit (BBL <i class="text-m-white thbanks -circle -bbl" aria-hidden="true"></i>)</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="creditBBL" data-type="decimal" data-verify="verifyCreditBBL">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Credit (SCB <i class="text-m-white thbanks -circle -scb" aria-hidden="true"></i>)</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="creditSCB" data-type="decimal" data-verify="verifyCreditSCB">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">QR Payment</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="qrPay" data-type="decimal" data-verify="verifyQRPayment">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">LINEPay</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="linePay" data-type="decimal" data-verify="verifyLinePay">-</p>
+                                                    </div>
+                                                </div>
+
+                                                <hr />
+
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Total</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right total" data-column-id="totalPayment" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @* รายละเอียดแยกตาม Surcharge *@
+                                        <div class="card">
+                                            <div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
+                                                <h2 class="card-title">รายละเอียดแยกตาม Surcharge</h2>
+                                            </div>
+                                            <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Transportation</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="transportation" data-type="decimal" data-type="decimal" data-verify="verifyTransportation">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">VAS Surcharge</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="vasSurcharge" data-type="decimal" data-type="decimal" data-verify="verifyVASSurcharge">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Discount</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="discount" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Vat</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="vat" data-type="decimal" data-type="decimal" data-verify="verifyVat">-</p>
+                                                    </div>
+                                                </div>
+
+                                                <hr />
+
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Total</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right total" data-column-id="totalSurcharge" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (!ViewData["Action"].Equals("verify") && !ViewData["Action"].Equals("confirm"))
+                            {
+                                @Html.Raw("</div><div class=\"col-md-6\">");
+                            }
+
+                            <h3 class="confirm-title">Bangkok Sameday</h3>
+                            <div class="bangkok-sameday">
+
+                                <div class="row">
+                                    <div class="col-sm-6">
+
+                                        <div class="card">
+                                            <div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
+                                                <h2 class="card-title">รายละเอียดแยกตาม Account</h2>
+                                            </div>
+                                            <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">COD</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="bsdcodSurcharge" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Transportation</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="bsdSurcharge" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Discount</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="discountBSD" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+
+                                                <hr />
+
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Total</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right total" data-column-id="bsdTotalAccout" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-sm-6">
+
+                                        <div class="card">
+                                            <div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
+                                                <h2 class="card-title">รายละเอียดการชำระเงิน</h2>
+                                            </div>
+                                            <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Cash</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="bsdCash" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">LINEPay</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="bsdLinePay" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+
+                                                <hr />
+
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Total</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right total" data-column-id="bsdTotalPayment" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="card-body m-t-10 p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">LINE Top-Up (Cash)</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="bsdLineTopUp" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Total Cash</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right total" data-column-id="bsdTotalPaymentCash" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="card">
+                                            <div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
+                                                <h2 class="card-title">รายละเอียดแยกตาม Surcharge</h2>
+                                            </div>
+                                            <div class="card-body m-t-10 p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">VAS Surcharge</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="bsdcodVasSurcharge" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">Vat</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="bsdcodVat" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-6">
+
+                                        <div class="card">
+                                            @*<div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
+                            <h2 class="card-title">รายละเอียดแยกตาม Account</h2>
+                        </div>*@
+                                            <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row m-t-10">
+                                                    <label class="col-sm-6 text-right">Total Shipments</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="bsdConsignment" data-type="numeric">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-sm-6">
+
+                                        <div class="card">
+                                            @*<div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
+                            <h2 class="card-title">รายละเอียดแยกตาม Account</h2>
+                        </div>*@
+                                            <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                                <div class="row m-t-10">
+                                                    <label class="col-sm-6 text-right">Total Boxes</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="bsdBoxes" data-type="numeric">-</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            @if (ViewData["Action"].Equals("confirmfc"))
+                            {
+                                <h3 class="confirm-title">RTSP/PSP</h3>
+                                <div class="rtsp-psp">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="card">
+                                                <div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
+                                                    <h2 class="card-title">RTSP</h2>
+                                                </div>
+                                                <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                                    <div class="row">
+                                                        <label class="col-sm-6 text-right">Total</label>
+                                                        <div class="col-sm-6">
+                                                            <p class="text-right" data-column-id="rtsp" data-type="decimal">-</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="card">
+                                                <div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
+                                                    <h2 class="card-title">PSP</h2>
+                                                </div>
+                                                <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                                    <div class="row">
+                                                        <label class="col-sm-6 text-right">Total</label>
+                                                        <div class="col-sm-6">
+                                                            <p class="text-right" data-column-id="psp" data-type="decimal">-</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+
+                            @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                            {
+                                @Html.Raw("</div><div class=\"col-md-6\">");
+                            }
+
+                                @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                {
+                                    <h3 class="confirm-title">Adjustment</h3>
+                                    <div class="adjustment m-l-15">
+                                        <div class="row">
+                                            <div class="col-xs-8">
+                                                <div>
+                                                    <div class="form-group hidden">
+                                                        <label for="Comm" class="col-sm-4 input-sm control-label">Comm</label>
+                                                        <div class="col-sm-8">
+                                                            @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                            {
+                                                                <input asp-for="Comm" type="text" class="form-control input-sm maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                                            }
+                                                            else
+                                                            {
+                                                                <p class="form-control-static input-sm" data-column-id="bonusCommission" data-type="decimal">-</p>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="AdjCreditCard" class="col-sm-4 input-sm control-label">Adj Credit Card</label>
+                                                        <div class="col-sm-8">
+                                                            @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                            {
+                                                                <input asp-for="AdjCreditCard" id="AdjCreditCard" type="text" class="form-control input-sm maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                                            }
+                                                            else
+                                                            {
+                                                                <p class="form-control-static input-sm" data-column-id="bonusAdjCreditCard" data-type="decimal">-</p>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="Other" class="col-sm-4 input-sm control-label">Other</label>
+                                                        <div class="col-sm-8">
+                                                            @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                            {
+                                                                <input asp-for="Other" id="Other" type="text" class="form-control input-sm maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                                            }
+                                                            else
+                                                            {
+                                                                <p class="form-control-static input-sm" data-column-id="adjOther" data-type="decimal">-</p>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="Return" class="col-sm-4 input-sm control-label">Return</label>
+                                                        <div class="col-sm-8">
+                                                            @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                            {
+                                                                <input asp-for="Return" id="Return" type="text" class="form-control input-sm maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                                            }
+                                                            else
+                                                            {
+                                                                <p class="form-control-static input-sm" data-column-id="returnCharge" data-type="decimal">-</p>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="Suspensse" class="col-sm-4 input-sm control-label">Suspensse</label>
+                                                        <div class="col-sm-8">
+                                                            @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                            {
+                                                                <input asp-for="Suspensse" id="Suspensse" type="text" class="form-control input-sm maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                                            }
+                                                            else
+                                                            {
+                                                                <p class="form-control-static input-sm" data-column-id="suspense" data-type="decimal">-</p>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="WithHoldingTax" class="col-sm-4 input-sm control-label">Withholding Tax</label>
+                                                        <div class="col-sm-8">
+                                                            @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                            {
+                                                                <input asp-for="WithHoldingTax" id="WithHoldingTax" type="text" class="form-control input-sm maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                                            }
+                                                            else
+                                                            {
+                                                                <p class="form-control-static input-sm" data-column-id="withHoldingTax" data-type="decimal">-</p>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="Promotion" class="col-sm-4 input-sm control-label">Pick-up Charge</label>
+                                                        <div class="col-sm-8">
+                                                            @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                            {
+                                                                <input asp-for="Promotion" id="Promotion" type="text" class="form-control input-sm maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                                            }
+                                                            else
+                                                            {
+                                                                <p class="form-control-static input-sm" data-column-id="promotion" data-type="decimal">-</p>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="BankCharge" class="col-sm-4 input-sm control-label">Bank Charge</label>
+                                                        <div class="col-sm-8">
+                                                            @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                            {
+                                                                <input asp-for="BankCharge" id="BankCharge" type="text" class="form-control input-sm maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                                            }
+                                                            else
+                                                            {
+                                                                <p class="form-control-static input-sm" data-column-id="bankCharge" data-type="decimal">-</p>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="AdjLinePay" class="col-sm-4 input-sm control-label">Adj LinePay</label>
+                                                        <div class="col-sm-8">
+                                                            @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                            {
+                                                                <input asp-for="AdjLinePay" id="AdjLinePay" type="text" class="form-control input-sm maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                                            }
+                                                            else
+                                                            {
+                                                                <p class="form-control-static input-sm" data-column-id="bonusAdjLinePay" data-type="decimal">-</p>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    @* add by kathawutpa 17/7/2019 for project sales x *@
+                                                    <div class="form-group">
+                                                        <label for="AdjLinePay" class="col-sm-4 input-sm control-label">Project</label>
+                                                        <div class="col-sm-8">
+                                                            @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                            {
+                                                                <input asp-for="Project" type="text" class="form-control input-sm maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" required>
+                                                            }
+                                                            else
+                                                            {
+                                                                <p class="form-control-static input-sm" data-column-id="project" data-type="decimal">-</p>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="VerifyDate" class="col-sm-4 input-sm control-label">Verify Date</label>
+                                                        <div class="col-sm-8">
+                                                            @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                            {
+                                                                <div class="input-group-icon">
+                                                                    <span asp-for="VerifyDate" class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                                                                    <input asp-for="VerifyDate" id="VerifyDate" class="form-control input-sm date-picker" data-mask="00/00/0000" data-min-date="@DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy", new CultureInfo("en-US"))" data-max-date="@maxDateStr" value="@DateTime.Now.AddDays(0).ToString("dd/MM/yyyy", new CultureInfo("en-US"))" required>
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <p class="form-control-static input-sm" data-column-id="verifyDate" data-type="date">-</p>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="VerifyDate" class="col-sm-4 input-sm control-label">Remittance Date</label>
+                                                        <div class="col-sm-8">
+                                                            @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                            {
+                                                                <div class="input-group-icon">
+                                                                    <span asp-for="RemittanceDate" class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                                                                    <input asp-for="RemittanceDate" id="RemittanceDate" class="form-control input-sm date-picker" data-mask="00/00/0000" data-min-date="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))" value="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))" required>
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <p class="form-control-static input-sm" data-column-id="remittanceDate" data-type="date">-</p>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-xs-4 p-l-0">
+                                                <div class="form-group hidden">
+                                                    @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                    {
+                                                        <input asp-for="CommRemark" id="CommRemark" type="text" class="form-control input-sm" placeholder="Remark">
+                                                    }
+                                                    else
+                                                    {
+                                                        <p class="form-control-static input-sm" data-column-id="bonusCommissionRemark"></p>
+                                                    }
+                                                </div>
+                                                <div class="form-group">
+                                                    @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                    {
+                                                        <input asp-for="AdjCreditCardRemark" id="AdjCreditCardRemark" type="text" class="form-control input-sm" placeholder="Remark">
+                                                    }
+                                                    else
+                                                    {
+                                                        <p class="form-control-static input-sm" data-column-id="adjCreditCardRemark"></p>
+                                                    }
+                                                </div>
+                                                <div class="form-group">
+                                                    @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                    {
+                                                        <input asp-for="OtherRemark" id="OtherRemark" type="text" class="form-control input-sm" placeholder="Remark">
+                                                    }
+                                                    else
+                                                    {
+                                                        <p class="form-control-static input-sm" data-column-id="adjOtherRemark"></p>
+                                                    }
+                                                </div>
+                                                <div class="form-group">
+                                                    @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                    {
+                                                        <input asp-for="ReturnRemark" id="ReturnRemark" type="text" class="form-control input-sm" placeholder="Remark">
+                                                    }
+                                                    else
+                                                    {
+                                                        <p class="form-control-static input-sm" data-column-id="returnChargeRemark"></p>
+                                                    }
+                                                </div>
+                                                <div class="form-group">
+                                                    @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                    {
+                                                        <input asp-for="SuspensseRemark" id="SuspensseRemark" type="text" class="form-control input-sm" placeholder="Remark">
+                                                    }
+                                                    else
+                                                    {
+                                                        <p class="form-control-static input-sm" data-column-id="suspenseRemark"></p>
+                                                    }
+                                                </div>
+                                                <div class="form-group">
+                                                    @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                    {
+                                                        <input asp-for="WithHoldingTaxRemark" id="WithHoldingTaxRemark" type="text" class="form-control input-sm" placeholder="Remark">
+                                                    }
+                                                    else
+                                                    {
+                                                        <p class="form-control-static input-sm" data-column-id="withHoldingTaxRemark"></p>
+                                                    }
+                                                </div>
+                                                <div class="form-group">
+                                                    @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                    {
+                                                        <input asp-for="PromotionRemark" id="PromotionRemark" type="text" class="form-control input-sm" placeholder="Remark">
+                                                    }
+                                                    else
+                                                    {
+                                                        <p class="form-control-static input-sm" data-column-id="promotionRemark"></p>
+                                                    }
+                                                </div>
+                                                <div class="form-group">
+                                                    @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                    {
+                                                        <input asp-for="BankChargeRemark" id="BankChargeRemark" type="text" class="form-control input-sm" placeholder="Remark">
+                                                    }
+                                                    else
+                                                    {
+                                                        <p class="form-control-static input-sm" data-column-id="bankChargeRemark"></p>
+                                                    }
+                                                </div>
+                                                <div class="form-group">
+                                                    @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                    {
+                                                        <input asp-for="AdjLinePayRemark" id="AdjLinePayRemark" type="text" class="form-control input-sm" placeholder="Remark">
+                                                    }
+                                                    else
+                                                    {
+                                                        <p class="form-control-static input-sm" data-column-id="adjLinePayRemark"></p>
+                                                    }
+                                                </div>
+                                                @* add by kathawutpa 17/7/2019 for project sales x *@
+                                                <div class="form-group">
+                                                    @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                                                    {
+                                                        <input asp-for="ProjectRemark" type="text" class="form-control input-sm" placeholder="Remark">
+                                                    }
+                                                    else
+                                                    {
+                                                        <p class="form-control-static input-sm" data-column-id="projectRemark"></p>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="card m-t-15 m-l-15">
+                                        <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
+                                            <div class="row">
+                                                <label class="col-sm-6 text-right modal-title">ยอดโอน</label>
+                                                <div class="col-sm-6">
+                                                    <p class="text-right modal-title" data-column-id="totalTransfer">-</p>
+                                                </div>
+                                            </div>
+                                            <hr />
+                                            <div class="row text-danger">                                               
+                                                <h4 class="col-sm-6 text-right modal-title"> ยอดโอนสุทธิ </h4>
+                                                <div class="col-sm-6">
+                                                    <h4 class="text-right modal-title">
+                                                        <img id="check-cross" src="~/assets/images/icon_cancel.png" style="width:6%" />
+                                                        <img id="check-check" src="~/assets/images/icon_checked.png" style="width:6%" />
+                                                        <img id="check-minus" src="~/assets/images/icon_minus.png" style="width:6%" />
+                                                        <strong><u data-column-id="totalNetTransfer">-</u></strong>
+                                                    </h4>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    @if (ViewData["Action"].Equals("confirmfc"))
+                    {
+                        <a target="_blank" href="#" data-command="export" class="btn btn-outline-primary">Download Excel</a>
+                        @*<button type="button" class="btn btn-outline-primary">Download PDF</button>*@
+                    }
+
+                    @if (ViewData["Action"].Equals("verify") || ViewData["Action"].Equals("confirm"))
+                    {
+                        <button type="submit" id="update" class="btn btn-outline-primary">@text</button>
+                    }
+                </div>
+            </div><!-- /.modal-content -->
+
+        </form>
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

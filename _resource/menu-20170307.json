@@ -1,0 +1,272 @@
+[
+  {
+    "Id": "df6dde12-42cf-4e69-ab33-df897d227ff2",
+    "Controller": "Dashboard",
+    "Action": "Index",
+    "Url": null,
+    "LinkText": "Dashboard",
+    "Icon": "ion-speedometer",
+    "Children": [
+      [
+        {
+          "Id": "6314a41b-08a1-4fcc-81a4-f1106ce4c4a8",
+          "Controller": "Dashboard",
+          "Action": "ShopDaily",
+          "Url": null,
+          "LinkText": "Shop Daily",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "b46ea7c2-999d-4143-997c-05119d8d6daa",
+          "Controller": "Dashboard",
+          "Action": "CloseShop",
+          "Url": null,
+          "LinkText": "Close Shop",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "0cec2fa5-c03e-4b3b-81d3-6c52852ee04f",
+          "Controller": "Dashboard",
+          "Action": "CloseBSD",
+          "Url": null,
+          "LinkText": "Close BSD",
+          "Icon": "",
+          "Children": [ [] ]
+        }
+      ]
+    ]
+  },
+  {
+    "Id": "23273daf-7153-44e0-97bb-9f38b48be6a7",
+    "Controller": "Reports",
+    "Action": "Index",
+    "Url": null,
+    "LinkText": "Reports",
+    "Icon": "ion-ios-list-outline",
+    "Children": [
+      [
+        {
+          "Id": "9c076292-cc8c-4545-bdda-e7aa3b561fe2",
+          "Controller": "Reports",
+          "Action": "DailyRevenueVerify",
+          "Url": null,
+          "LinkText": "Daily Revenue Verify",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "e02906d3-589f-4778-9af7-258e3320ede1",
+          "Controller": "Reports",
+          "Action": "DailyRevenueConfirm",
+          "Url": null,
+          "LinkText": "Daily Revenue Confirm",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "e25f4670-f9c0-4b0b-a839-b212a62aa128",
+          "Controller": "Reports",
+          "Action": "ShopDailyRevenue",
+          "Url": null,
+          "LinkText": "Daily Revenue",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "e2a87370-dc62-46da-8d07-7d24de7dab20",
+          "Controller": "Reports",
+          "Action": "Receipt",
+          "Url": null,
+          "LinkText": "Receipt",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "14ac1eae-889b-453d-b693-583515e8dcfb",
+          "Controller": "Reports",
+          "Action": "TaxInvoice",
+          "Url": null,
+          "LinkText": "Tax Invoice",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "3c6c180f-ff48-40dd-9034-7d67d54a5341",
+          "Controller": "Reports",
+          "Action": "Commission",
+          "Url": null,
+          "LinkText": "Commission",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "6a32ccf7-f820-4db8-bf84-0b390a7ac965",
+          "Controller": "Reports",
+          "Action": "LINEPay",
+          "Url": null,
+          "LinkText": "LINE Pay",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "47d2fd47-bde2-4837-9d1a-a16c3e83efa7",
+          "Controller": "Reports",
+          "Action": "LINETopUpRemittance",
+          "Url": null,
+          "LinkText": "LINE Top-Up Remittance",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "b9418999-e373-413e-b6ca-17fd0d756b53",
+          "Controller": "Reports",
+          "Action": "DailyRevenueConfirmFC",
+          "Url": null,
+          "LinkText": "Daily Revenue Confirm FC",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "d017f029-a96d-4287-ad65-35bc639aba69",
+          "Controller": "Reports",
+          "Action": "SummaryCommissionFC",
+          "Url": null,
+          "LinkText": "Summary Commission FC",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "61ce8aab-a94c-45be-a6a6-e345e3de6432",
+          "Controller": "Reports",
+          "Action": "MonthlyExpenseUpdateRT",
+          "Url": null,
+          "LinkText": "Monthly Expense Update RT",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "4b149e23-b9e5-4e2c-b09c-80b04d16888c",
+          "Controller": "Reports",
+          "Action": "SummaryCommissionRT",
+          "Url": null,
+          "LinkText": "Summary Commission RT",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "231305c7-2f6d-4517-8078-0c2ee1dd8b5c",
+          "Controller": "Reports",
+          "Action": "MonthlyExpenseVerifyACC",
+          "Url": null,
+          "LinkText": "Monthly Expense Verify ACC",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "3196186e-9533-4637-8af8-5eef1c557a21",
+          "Controller": "Reports",
+          "Action": "MonthlyExpenseVerifyOps",
+          "Url": null,
+          "LinkText": "Monthly Expense Verify Ops",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "bcb23d61-9269-4f38-b166-5070c25ca2a0",
+          "Controller": "Reports",
+          "Action": "MonthlyExpenseVerifyRT",
+          "Url": null,
+          "LinkText": "Monthly Expense Verify RT",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "fe95c134-5cf3-42ef-bebd-04c65672438f",
+          "Controller": "Reports",
+          "Action": "DHLVerifyRT",
+          "Url": null,
+          "LinkText": "DHL Verify RT",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "9287d38c-755f-4f1a-b786-35ca1fc8a53c",
+          "Controller": "Reports",
+          "Action": "DCTopUpVerify",
+          "Url": null,
+          "LinkText": "DC Top-Up Verify",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "2d15afb0-0a86-48a3-81cb-488e44c45aaf",
+          "Controller": "Reports",
+          "Action": "MonthlyExpenseVerifyRTSupply",
+          "Url": null,
+          "LinkText": "Monthly Expense Verify RT-Supply",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "b925b93c-d088-4adf-a58c-c9da49f9d283",
+          "Controller": "Reports",
+          "Action": "DailyCOD",
+          "Url": null,
+          "LinkText": "Daily COD",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "9d225631-8c62-4a56-974a-92824781a27d",
+          "Controller": "Reports",
+          "Action": "DownloadTUDReport",
+          "Url": null,
+          "LinkText": "Download TUD Report",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "3ef3a5da-b0db-4d8b-8533-4381c03a0956",
+          "Controller": "Reports",
+          "Action": "StockOrderMonthly",
+          "Url": null,
+          "LinkText": "Stock Order Monthly",
+          "Icon": "",
+          "Children": [ [] ]
+        }
+      ]
+    ]
+  },
+  {
+    "Id": "dd72aa8f-e310-4170-b9d6-c1c7c6b72b41",
+    "Controller": "Administrator",
+    "Action": "Index",
+    "Url": null,
+    "LinkText": "Administrator",
+    "Icon": "ion-gear-b",
+    "Children": [
+      [
+        {
+          "Id": "9d8cf890-fea2-4a3e-8534-324d3e4997c0",
+          "Controller": "Administrator",
+          "Action": "Users",
+          "Url": null,
+          "LinkText": "Users",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "125f4ec3-5dca-4d5e-a5eb-770a189385e0",
+          "Controller": "Administrator",
+          "Action": "Menus",
+          "Url": null,
+          "LinkText": "Menus",
+          "Icon": "",
+          "Children": [ [] ]
+        }
+      ]
+    ]
+  }
+]

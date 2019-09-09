@@ -1,0 +1,122 @@
+﻿@model ReportViewModel
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">@SharedLocalizer["Search"]</h2>
+    </div>
+    <div class="card-body card-padding">
+        <form id="form-search">
+            @if (ViewData["action"].Equals("linepay"))
+            {
+                <input type="hidden" name="TypeLine" value="payment" autocomplete="off" />
+            }
+            <div class="row">
+                <div class="@(ViewData["controller"].Equals("parcelshop") || ViewData["action"].Equals("linepay") ? "col-sm-4" : "col-sm-6")">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Branch type"]</label>
+                        <select asp-for="BranchType" class="selectpicker" data-ke-action="branch-type-list" data-ke-target="#Branch" data-width="100%" data-live-search="true" title="@SharedLocalizer["Select branch type"]" multiple data-actions-box="true" required disabled>
+                            <option value="-1" selected>Loading...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="@(ViewData["controller"].Equals("parcelshop") || ViewData["action"].Equals("linepay") ? "col-sm-4" : "col-sm-6")">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Branch"]</label>
+                        @if (ViewData["action"].Equals("linepay"))
+                        {
+                            <select asp-for="BranchList" class="selectpicker" data-width="100%" data-live-search="true" data-actions-box="true" title="@SharedLocalizer["Select Branch"]" required disabled></select>
+
+                        }
+                        else
+                        {
+                            <select asp-for="BranchList" class="selectpicker" multiple data-width="100%" data-live-search="true" data-actions-box="true" title="@SharedLocalizer["Select Branch"]" required disabled></select>
+                        }
+                    </div>
+                </div>
+                @if (ViewData["controller"].Equals("parcelshop"))
+                {
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <label class="control-label">@SharedLocalizer["Report date"]</label>
+                            <div class="input-group-icon">
+                                <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                                <input asp-for="DateFrom" id="SearchDateFrom" class="form-control input-mask" data-mask="00/00/0000" value="@DateTime.Now.AddDays(DateTime.Now.TimeOfDay.Hours >= 18 ? 0:-1).ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                            </div>
+                        </div>
+                    </div>
+                }
+                @if (ViewData["action"].Equals("linepay"))
+                {
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <label class="control-label">@SharedLocalizer["Report date"]</label>
+                            <div class="input-group-icon">
+                                <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                                <input asp-for="DateFrom" id="SearchDateFrom" class="form-control input-mask" data-mask="00/00/0000" value="@DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (@ViewData["controller"].Equals("reports") && !(ViewData["action"].Equals("commission") || ViewData["action"].Equals("linepay")))
+            {
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="control-label">@SharedLocalizer["Date from"]</label>
+                            <div class="input-group-icon">
+                                <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                                <input asp-for="DateFrom" id="SearchDateFrom" class="form-control input-mask" data-mask="00/00/0000" value="@DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="control-label">@SharedLocalizer["Date to"]</label>
+                            <div class="input-group-icon">
+                                <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                                <input asp-for="DateTo" id="SearchDateTo" class="form-control input-mask" data-mask="00/00/0000" value="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            <div class="row">
+                <div class="col-sm-6">
+                    @if (@ViewData["action"].Equals("shopdailyrevenue"))
+                    {
+                        <div class="form-group">
+                            <label class="control-label">@SharedLocalizer["Order by"]</label>
+                            <select asp-for="OrderBy" class="selectpicker" data-width="100%" title="@SharedLocalizer["Order by"]">
+                                <option value="1" selected>Branch</option>
+                                <option value="2">Revenue</option>
+                            </select>
+                        </div>
+                    }
+                    else if (@ViewData["action"].Equals("commission"))
+                    {
+                        <input asp-for="DateFrom" type="hidden" value="@DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                        <input asp-for="DateTo" type="hidden" value="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                        <div class="form-group">
+                            <label class="control-label">@SharedLocalizer["Month/Year"]</label>
+                            <input asp-for="MonthYear" id="SearchMonthYear" class="form-control input-mask" data-mask="00/0000" value="@DateTime.Now.ToString("MM/yyyy", new CultureInfo("en-US"))" required>
+                        </div>
+                    }
+                </div>
+                <div class="col-sm-6 text-right">
+                    <div class="form-group">
+                        @if (ViewData["action"].Equals("shopdailyrevenue") || ViewData["action"].Equals("commission"))
+                        {
+                        <label class="control-label">&nbsp;</label>
+                        }
+                        <div>
+                            <button type="reset" class="btn btn-default" data-toggle="tagsinput-clear" data-target="#form-search .tagsinput">@SharedLocalizer["Clear"]</button>
+                            <button type="submit" class="btn btn-primary btn-search">@SharedLocalizer["Search"]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,1 @@
+http://172.25.32.112:8085/POSEDIService.svc/json/KEEDI_POST_Shop_Member

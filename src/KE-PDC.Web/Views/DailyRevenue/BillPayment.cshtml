@@ -1,0 +1,1190 @@
+﻿
+@{
+    ViewData["Title"] = "Bill Payment Confirm";
+    ViewData["Action"] = "confirm";
+}
+
+
+@section links {
+    <link rel="stylesheet" href="~/lib/bootstrap-select/dist/css/bootstrap-select.css" />
+    <link rel="stylesheet" href="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.css" />
+    <link rel="stylesheet" href="~/assets/vendor/thbank-font/css/thbanklogos.min.css" />
+    <link rel="stylesheet" href="~/assets/stylesheets/confirm.css" />
+}
+
+@section scripts {
+    <script src="~/lib/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.js"></script>
+    <script src="~/lib/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+    <script src="~/lib/jquery-maskmoney/dist/jquery.maskMoney.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/moment/min/moment-with-locales.min.js"></script>
+    <script src="~/lib/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/lib/bootstrap-tagsinput/dist/bootstrap-tagsinput.js"></script>
+    <script src="~/lib/matchheight/dist/jquery.matchHeight-min.js"></script>
+    <script src="~/assets/javascripts/bootstrap-select-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootgrid-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootstrap-datetimepicker.js"></script>
+    <script src="~/assets/javascripts/jquery.validation-default.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            let fractionDigits = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+
+            // FORM SEARCH
+            // ======================
+            $('[type=reset]').click(function (e) {
+                e.preventDefault();
+                $(this).closest('form').get(0).reset();
+                $("select").selectpicker('render');
+            });
+
+            $('#modal-confirm').on("show.bs.modal", function () {
+                //$(this).find('input[name="CommRemark"], input[name="OtherRemark"], input[name="ReturnRemark"], input[name="SuspensseRemark"], input[name="WithHoldingTaxRemark"], input[name="PromotionRemark"]').val("");
+            });
+
+            $('[data-command="confirm-select"]').on("click", function (e) {
+                e.preventDefault();
+                var checked = $("#grid-match tbody input:checked"),
+                    Branches = [];
+                var Vdate = $("#Verifydate").val();
+                var Rdate = $("#RemittanceDate").val();
+                for (var i = 0; i < checked.length; i++) {
+                    Branches.push(checked.eq(i).val());
+                }
+                if (Branches.length == 0) {
+                    swal("Confirm Select", "Please select the information to be updated!", "warning")
+                }
+                else {
+                    $.post("Confirm", {
+                        Branches: Branches,
+                        Verifydate: Vdate,
+                        RemittanceDate: Rdate,
+                    }, function (response) {
+                        if (response.success) {
+
+                            swal({ title: "Verified", text: "Save success !", type: "success" },
+                                function () {
+                                    $("#card-unmatch-results").hide();
+                                    $("#card-match-results").hide();
+                                    $('#comfirm').modal('toggle');
+                                    $("#card-notfound-results").hide();
+                                    var BranchIdList = $('#BranchList').val();
+                                    var DateFrom = $('#SearchDateFrom').val();
+                                    var DateTo = $('#SearchDateTo').val();
+                                    $.ajax({
+                                        type: "POST",
+                                        url: "Bill",
+                                        data: JSON.stringify({ BranchIdList: BranchIdList, DateFrom: DateFrom, DateTo: DateTo }),
+                                        contentType: "application/json; charset=utf-8",
+                                        dataType: "json",
+                                        processData: false,
+                                        success: function (response) {
+                                            console.log(response.data)
+                                            console.log(response.data["result"])
+                                            $('#matchBranch').text("Transaction match " + response.data["result"][0]["matchBranch"] + " Branch")
+                                            $('#matchPercent').text(response.data["result"][0]["matchPercent"] + " %")
+                                            $('#noFoundBranch').text("Transfer or wrong data " + response.data["result"][0]["noFoundBranch"] + " Branch")
+                                            $('#noFoundPercent').text(response.data["result"][0]["noFoundPercent"] + " %")
+                                            $('#unmatchBranch').text("Transaction unmatch " + response.data["result"][0]["unmatchBranch"] + " Branch")
+                                            $('#unmatchPercent').text(response.data["result"][0]["unmatchPercent"] + " %")
+                                            //
+
+                                        },
+                                        error: function (e) {
+                                            swal("Oops!", "Can't Upload Excel", "error")
+                                            return false;
+                                        }
+
+                                    });
+                                }
+                            );
+                        }
+                        else {
+                            var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                            swal("Error", message, "error");
+                            return false;
+                        }
+                    });
+
+                }
+            });
+
+            $('input[type=file]').change(function (e) {
+                $('#customfileupload').html($(this).val());
+            });
+            $('#btnUpload').on('click', function () {
+                var fileExtension = ['xls', 'xlsx'];
+                var filename = $('#my_file').val();
+                if (filename.length == 0) {
+                    swal("Please select file", "", "error")
+                    return false;
+                }
+                else {
+                    var extension = filename.replace(/^.*\./, '');
+                    if ($.inArray(extension, fileExtension) == -1) {
+                        swal("Please select only excel files.", "", "error")
+                        return false;
+                    }
+                }
+                var fdata = new FormData();
+                var fileUpload = $("#my_file").get(0);
+                var files = fileUpload.files;
+                fdata.append(files[0].name, files[0]);
+                $.ajax({
+                    type: "POST",
+                    url: "OnPostImport?handler=Import",
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader("XSRF-TOKEN",
+                            $('input:hidden[name="__RequestVerificationToken"]').val());
+                    },
+                    data: fdata,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        if (response.success == true) {
+                            swal({ title: "Good job", text: "Upload Success!", type: "success" },
+                                function () {
+                                    window.location = 'BillPayment'
+                                }
+                            );
+
+                        }
+                        else {
+                            swal("Please upload transaction from BBL Bank only.", response.message, "error")
+                            return false;
+                        }
+                    },
+                    error: function (e) {
+                        swal("Oops!", "Can't Upload Excel", "error")
+                        return false;
+                    }
+                });
+            })
+            $('#btnUploadn').on('click', function () {
+                var fileExtension = ['xls', 'xlsx'];
+                var filename = $('#my_filen').val();
+                if (filename.length == 0) {
+                    swal("Please select file", "", "error")
+                    return false;
+                }
+                else {
+                    var extension = filename.replace(/^.*\./, '');
+                    if ($.inArray(extension, fileExtension) == -1) {
+                        swal("Please select only excel files.", "", "error")
+                        return false;
+                    }
+                }
+                var fdata = new FormData();
+                var fileUpload = $("#my_filen").get(0);
+                var files = fileUpload.files;
+                fdata.append(files[0].name, files[0]);
+                $.ajax({
+                    type: "POST",
+                    url: "OnPostImportNobill?handler=Import",
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader("XSRF-TOKEN",
+                            $('input:hidden[name="__RequestVerificationToken"]').val());
+                    },
+                    data: fdata,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        if (response.success == true) {
+                            swal({ title: "Good job", text: "Upload Success!", type: "success" },
+                                function () {
+                                    window.location = 'BillPayment'
+                                }
+                            );
+
+                        }
+                        else {
+                            swal("Please upload transaction from BBL Bank only.", response.message, "error")
+                            return false;
+                        }
+                    },
+                    error: function (e) {
+                        swal("Oops!", "Can't Upload Excel", "error")
+                        return false;
+                    }
+                });
+            })
+        });
+    </script>
+    <script>
+     var searchFirstTime_match = true;
+     var searchFirstTime_unmatch = true;
+     var searchFirstTime_nf = true;
+     var gridSearchResults_unmatch;
+     var gridSearchResults_match;
+     var gridSearchResults_nf;
+
+        let fractionDigits = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+        $('#search').on('click', function () {
+             $("#card-unmatch-results").hide();
+             $("#card-match-results").hide();
+             $("#card-notfound-results").hide();
+            var BranchIdList = $('#BranchList').val();
+            var DateFrom = $('#SearchDateFrom').val();
+            var DateTo = $('#SearchDateTo').val();
+            if (BranchIdList == "" || BranchIdList == null) {
+                swal("Please select Branlist", "", "error")
+                return false;
+            }
+            $.ajax({
+                type: "POST",
+                url: "Bill",
+                data: JSON.stringify({BranchIdList: BranchIdList, DateFrom: DateFrom, DateTo: DateTo }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                processData: false,
+                success: function (response) {
+                    console.log(response.data)
+                    console.log(response.data["result"])
+                    response.data["result"][0]["matchBranch"] == null ?  $('#matchBranch').text("ไม่พบข้อมูล") : $('#matchBranch').text("Transaction match " + response.data["result"][0]["matchBranch"] + " Branch")
+                    response.data["result"][0]["matchPercent"] == null ?  $('#matchPercent').text("0 %") : $('#matchPercent').text( response.data["result"][0]["matchPercent"] + " %")
+                    response.data["result"][0]["noFoundBranch"] == null ?   $('#noFoundBranch').text("ไม่พบข้อมูล") :  $('#noFoundBranch').text("Transfer or wrong data " + response.data["result"][0]["noFoundBranch"] + " Branch")
+                    response.data["result"][0]["noFoundPercent"] == null ?   $('#noFoundPercent').text("0 %") : $('#noFoundPercent').text(response.data["result"][0]["noFoundPercent"] + " %")
+                    response.data["result"][0]["unmatchBranch"] == null ?  $('#unmatchBranch').text("ไม่พบข้อมูล") :  $('#unmatchBranch').text("Transaction unmatch " + response.data["result"][0]["unmatchBranch"] + " Branch")
+                    response.data["result"][0]["unmatchPercent"] == null ? $('#unmatchPercent').text("0 %") : $('#unmatchPercent').text(response.data["result"][0]["unmatchPercent"] + " %")
+
+
+                    //
+
+                },
+                error: function (e) {
+                    swal("Oops!", "Can't Upload Excel", "error")
+                    return false;
+                }
+
+        });
+    });
+
+     //$('#match').on('click', function () {
+     //               var BranchIdList = $('#BranchList').val();
+     //               var DateFrom = $('#SearchDateFrom').val();
+     //               var DateTo = $('#SearchDateTo').val();
+     //               var MatchStatus = 1;
+     //         $.ajax({
+     //                                   type: "POST",
+     //                                   url: "GetDataBill",
+     //                                   data: JSON.stringify({ BranchIdList: BranchIdList, DateFrom: DateFrom, DateTo: DateTo, MatchStatus : MatchStatus }),
+     //                                   contentType: "application/json; charset=utf-8",
+     //                                   dataType: "json",
+     //                                   processData: false,
+     //                                   success: function (response) {
+     //                                       console.log(response)
+     //                                       console.log(response.data["result"])
+     //                                       $('#matchBranch').text("Transaction match " + response.data["result"][0]["matchBranch"] + " Branch")
+     //                                       $('#matchPercent').text(response.data["result"][0]["matchPercent"] + " %")
+     //                                       $('#noFoundBranch').text("Transfer or wrong data " + response.data["result"][0]["noFoundBranch"] + " Branch")
+     //                                       $('#noFoundPercent').text(response.data["result"][0]["noFoundPercent"] + " %")
+     //                                       $('#unmatchBranch').text("Transaction unmatch " + response.data["result"][0]["unmatchBranch"] + " Branch")
+     //                                       $('#unmatchPercent').text(response.data["result"][0]["unmatchPercent"] + " %")
+     //                                       //
+
+     //                                   },
+     //                                   error: function (e) {
+     //                                       swal("Oops!", "Can't Upload Excel", "error")
+     //                                       return false;
+     //                                   }
+
+     //                               });
+     //});
+
+    $('#match').on('click', function () {
+        var Match = 1;
+        if (searchFirstTime_match) {
+
+            searchFirstTime_match = false;
+            gridSearchResults_match = $("#grid-match").bootgrid({
+                ajaxSettings: {
+                    method: "POST",
+                    contentType: "application/json",
+                },
+                url: 'GetDataBill',
+                requestHandler: function (request) {
+                    var BranchIdList = $('#BranchList').val();
+                    var Branch = $('#Branch').val();
+                    var DateFrom = $('#SearchDateFrom').val();
+                    var DateTo = $('#SearchDateTo').val();
+                    var MatchStatus = Match;
+                    request = {
+                        BranchType: Branch,
+                        BranchIdList: BranchIdList,
+                        BranchList: typeof BranchIdList == "object" ? BranchIdList.join(",") : BranchIdList,
+                        DateFrom: DateFrom,
+                        DateTo: DateTo,
+                        MatchStatus: MatchStatus,
+                        // Pagination
+                         page: request.current,
+                         perPage: request.rowCount,
+                         order: Object.keys(request.sort)[0],
+                         direction: request.sort[Object.keys(request.sort)[0]],
+                        searchPhrase: request.searchPhrase,
+
+                    };
+                    $("#grid-match").data("export-params", request);
+                        console.log(request);
+                    return JSON.stringify(request);
+                },
+                sorting: false,
+                selection: true,
+                multiSelect: true,
+                templates: {
+                    header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static">@SharedLocalizer["Search Results"]</h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20">@if (true) { <buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-match">@SharedLocalizer["Export (Excel)"]</buttom>}@if (false) { <buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="pdf" data-ke-target="#grid-search-results"><i class="ion-document-text"></i> @SharedLocalizer["Export (PDF)"]</buttom>}</div></div></div></div>',
+                },
+                formatters: {
+
+                    checkCloseShop: function (column, row) {
+                        var chkcloseshop = row.checkCloseShop == true ? '<div class="text-success"><b><i class="ion-checkmark-round"></i> Checked</b></div>' : '<div class="text-danger"><i class="ion-android-warning"></i> UnChecked</div>'
+                        return chkcloseshop;
+                    },
+                    reconcileMatch: function (column, row) {
+                        var match = row.reconcileMatch  == 1 ? '<div class="text-success"><b><i class="icon ion-ios-checkmark-outline"></i> Matched</b></div>' : '<div class="text-danger"><i class="ion-android-warning"></i> Unmatched</div>'
+                        return match;
+                    },
+                    erpid: function (column, row) {
+                        var chkerp = row.erP_ID  == null ? '-' : row.erP_ID
+                        return chkerp
+                    },
+                    commands: function (column, row) {  
+                        var btnRollback = row.isAdjust == true ? '<button class="btn btn-xs btn-warning text-uppercase" data-command="Rollback"  data-row-id="' + row.id + '" data-row-branch="' + row.branchID + '" data-row-report-date="' + row.reportDate + '">Rollback</button>' : '<button disabled class="btn btn-xs btn-default text-uppercase" data-command="Rollback"  data-row-id="' + row.id + '" data-row-branch="' + row.branchID + '" data-row-report-date="' + row.reportDate + '">Rollback</button>'
+                        //var btnRollback = '<button class="btn btn-xs btn-warning text-uppercase" data-command="Rollback"  data-row-id="' + row.id + '" data-row-branch="' + row.branchID + '" data-row-report-date="' + row.reportDate + '">Rollback</button>'
+                        return btnRollback;
+                    }
+                }
+            }).on("selected.rs.jquery.bootgrid", function(e, rows)
+            {
+                var rowIds = [];
+                for (var i = 0; i < rows.length; i++)
+                {
+                    rowIds.push(rows[i].branchID);
+                }
+            }).on("deselected.rs.jquery.bootgrid", function(e, rows)
+            {
+                var rowIds = [];
+                for (var i = 0; i < rows.length; i++)
+                {
+                    rowIds.push(rows[i].branchID);
+                }
+            }).on("loaded.rs.jquery.bootgrid", function () {
+                gridSearchResults_match.find('[data-command="Rollback"]').on('click', function () {
+                    var that = this,
+                        id = $(this).data("row-id"),
+                        branch = $(this).data("row-branch"),
+                        reportDate = $(this).data("row-report-date")
+                    swal({
+                        title: "Are you sure?",
+                        text: "Confirm this select to adjust as Rollback.",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonClass: "btn-outline-primary",
+                        confirmButtonText: "Yes, Rollback it!",
+                        closeOnConfirm: false
+                    }, function () {
+                        $.post("Rollback", {
+                            id: id,
+                            branch: branch,
+                            reportDate: reportDate
+                        }, function (response) {
+                            if (response.success) {
+                                swal({ title: "Rollback", text: "Save Success!", type: "success" },
+                                    function () {
+                                        $("#card-unmatch-results").hide();
+                                        $("#card-match-results").hide();
+                                        $("#card-notfound-results").hide();
+                                        var BranchIdList = $('#BranchList').val();
+                                        var DateFrom = $('#SearchDateFrom').val();
+                                        var DateTo = $('#SearchDateTo').val();
+                                        $.ajax({
+                                            type: "POST",
+                                            url: "Bill",
+                                            data: JSON.stringify({ BranchIdList: BranchIdList, DateFrom: DateFrom, DateTo: DateTo }),
+                                            contentType: "application/json; charset=utf-8",
+                                            dataType: "json",
+                                            processData: false,
+                                            success: function (response) {
+                                                console.log(response.data)
+                                                console.log(response.data["result"])
+                                                $('#matchBranch').text("Transaction match " + response.data["result"][0]["matchBranch"] + " Branch")
+                                                $('#matchPercent').text(response.data["result"][0]["matchPercent"] + " %")
+                                                $('#noFoundBranch').text("Transfer or wrong data " + response.data["result"][0]["noFoundBranch"] + " Branch")
+                                                $('#noFoundPercent').text(response.data["result"][0]["noFoundPercent"] + " %")
+                                                $('#unmatchBranch').text("Transaction unmatch " + response.data["result"][0]["unmatchBranch"] + " Branch")
+                                                $('#unmatchPercent').text(response.data["result"][0]["unmatchPercent"] + " %")
+                                                //
+
+                                            },
+                                            error: function (e) {
+                                                swal("Oops!", "Can't Upload Excel", "error")
+                                                return false;
+                                            }
+
+                                        });
+                                    }
+                                );
+                            }
+                            else {
+                                var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                                swal("Error", message, "error");
+                                return false;
+                            }
+                        });
+                    });
+                })
+            });
+
+            $("#card-match-results").delay(500).fadeIn(300);
+            $("#card-unmatch-results").hide();
+            $("#card-match-results").show();
+            $("#card-notfound-results").hide();
+            //$("#card-unmatch-results").hide();
+        } else {
+            $("#card-match-results").show();
+            $("#card-notfound-results").hide();
+            gridSearchResults_match.bootgrid("reload");
+            $("#card-unmatch-results").hide();
+         }
+     });
+
+    $('#unmatch').on('click', function () {
+         var Match = 0;
+        if (searchFirstTime_unmatch) {
+
+            searchFirstTime_unmatch = false;
+            gridSearchResults_unmatch = $("#grid-unmatch").bootgrid({
+                ajaxSettings: {
+                    method: "POST",
+                    contentType: "application/json",
+                },
+                url: 'GetDataBill',
+                requestHandler: function (request) {
+                    var BranchIdList = $('#BranchList').val();
+                    var DateFrom = $('#SearchDateFrom').val();
+                    var DateTo = $('#SearchDateTo').val();
+                    var MatchStatus = Match;
+                    request = {
+                        BranchIdList: BranchIdList,
+                        DateFrom: DateFrom,
+                        DateTo: DateTo,
+                        MatchStatus: MatchStatus,
+                        // Pagination
+                        page: request.current,
+                        perPage: request.rowCount,
+                        orderBy: null,
+                        orderDirection: null
+                    };
+
+                    $("#grid-unmatch").data("export-params", request);
+
+                    return JSON.stringify(request);
+                },
+                sorting: false,
+                selection: true,
+                multiSelect: true,
+                templates: {
+                    header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static">@SharedLocalizer["Search Results"]</h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20">@if (true) { <buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-search-results">@SharedLocalizer["Export (Excel)"]</buttom>}@if (false) { <buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="pdf" data-ke-target="#grid-search-results"><i class="ion-document-text"></i> @SharedLocalizer["Export (PDF)"]</buttom>}</div></div></div></div>',
+                },
+                formatters: {
+
+                    checkCloseShop: function (column, row) {
+                        console.log(row)
+                        var chkcloseshop = row.checkCloseShop == true ? '<div class="text-success"><b><i class="ion-checkmark-round"></i> Checked</b></div>' : '<div class="text-danger"><i class="ion-android-warning"></i> UnChecked</div>'
+                        return chkcloseshop;
+                    },
+                    reconcileMatch: function (column, row) {
+                        var match = row.reconcileMatch == 0 ? '<div class="text-warning"><b><i class="ion-android-warning"></i> Unmatched</b></div>' : '<div class="text-danger"><i class="ion-android-warning"></i> matched</div>'
+                        return match;
+                    },
+                    erpid: function (column, row) {
+                        var chkerp = row.erP_ID  == null ? '-' : row.erP_ID
+                        return chkerp                   
+                    },
+                    commands: function (column, row) {
+                        var btnBankCharge = '<button class="btn btn-xs btn-success text-uppercase" data-command="bankCharge" data-row-variance="' + row.variance + '" data-row-id="' + row.id + '" data-row-branch="' + row.branchID + '" data-row-report-date="' + row.reportDate + '">Bank Charge</button>'
+                        var btnShortage = '<button class="btn btn-xs btn-warning text-uppercase" data-command="shortage" data-row-variance="' + row.variance + '" data-row-id="' + row.id + '" data-row-branch="' + row.branchID + '" data-row-report-date="' + row.reportDate + '">Shortage</button>'
+                        var btnEdit = '<button   class="btn btn-xs btn-primary text-uppercase" data-row-variance="' + row.variance +'" data-command="edit" data-row-id="' + row.id + '" data-row-branch="' + row.branchID + '" data-row-report-date="' + row.reportDate + '">edit</button>'
+                        return btnBankCharge + ' ' + btnShortage + ' ' + btnEdit;
+                    }
+                }
+            }).on("loaded.rs.jquery.bootgrid", function () {
+                gridSearchResults_unmatch.find('[data-command="edit"]').on('click', function () {
+                    var that = this,
+                        id = $(this).data("row-id"),
+                        branch = $(this).data("row-branch"),
+                        reportDate = $(this).data("row-report-date"),
+                        command = $(this).data("command");
+                    var variance = $(this).data("row-variance");
+                    console.log( $(this))
+                    $.pageLoader("show");
+
+                    $("#form-detail").data("row-id", id);
+
+                    $.get(endpoint + "DailyRevenueDetail/" + branch, {
+                        ReportDate: reportDate,
+                    }, function (response) {
+                        var result = response.result;
+                        console.log(result);
+                        if (response.success) {
+                            $.each(result, function (key, value) {
+                                var $e = $("#form-detail").find('[data-column-id="' + key + '"]'),
+                                    type = $e.data("type"),
+                                    textValue = "-";
+                                switch (type) {
+                                    case "numeric":
+                                        textValue = value.toLocaleString();
+                                        break;
+                                    case "decimal":
+                                        textValue = (Math.round(value * 100) / 100).toLocaleString(undefined, fractionDigits);
+                                        break;
+                                    case "date":
+                                        textValue = value == null ? "-" : moment(value).format("DD/MM/YYYY");
+                                        break;
+                                }
+
+                                $e.text(textValue);
+                            });
+
+
+                            var totalService = (result.freight + result.cod + result.insur + result.package + result.salePackage + result.lineTopUp) - result.discount,
+                                totalPayment = result.cash + result.rabbit + result.credit + result.linePay + result.qrPay,
+                                totalSurcharge = (result.transportation + result.vasSurcharge + result.vat) - result.discount,
+                                bsdTotalAccout = (result.bsdSurcharge) - result.discountBSD,
+                                bsdTotalPayment = result.bsdCash + result.bsdLinePay,
+                                bsdTotalPaymentCash = result.bsdCash + result.bsdLineTopUp;
+
+                           
+                            console.log($(this));
+
+                            totalService = Math.round(totalService * 100) / 100;
+                            totalPayment = Math.round(totalPayment * 100) / 100;
+                            totalSurcharge = Math.round(totalSurcharge * 100) / 100;
+
+                            var totalNetTransfer = result.totalTransfer + (result.bonusCommission + result.adjOther + result.returnCharge + result.suspense + result.withHoldingTax + result.promotion + result.bankCharge + result.adjCreditCard + result.adjLinePay);
+                            var status = true
+                            $('#modal-confirm').find('[type="submit"]').prop("disabled", false);
+                            $('#modal-confirm').find('[data-column-id]').removeClass('text-danger');
+
+                            $.each(result, function (k, v) {
+                                if (k === 'verifyDate' || !k.startsWith('verify') || v === true) return
+                                status = false
+                                $('#modal-confirm').find('[data-verify="' + k + '"]').addClass('text-danger');
+                            })
+
+                            console.log(totalSurcharge)
+                            console.log(totalService)
+                            console.log(totalPayment)
+
+                            if (totalSurcharge !== totalService || totalSurcharge !== totalPayment) {
+                                $('#modal-confirm').find('[data-column-id="totalService"],[data-column-id="totalPayment"],[data-column-id="totalSurcharge"]').addClass('text-danger');
+                            }
+                            if (status === false || totalSurcharge !== totalService || totalSurcharge !== totalPayment) {
+                                $('#modal-confirm').find('[type="submit"]').prop("disabled", true);
+                            }
+
+                            $("#form-detail")
+                                .find('[data-column-id="totalTransfer"]').data('val', result.totalTransfer).text(result.totalTransfer.toLocaleString(undefined, fractionDigits))
+                                .end().find('[data-column-id="totalNetTransfer"]').text(totalNetTransfer.toLocaleString(undefined, fractionDigits))
+                                .end().find('[data-column-id="totalService"]').text(totalService.toLocaleString(undefined, fractionDigits))
+                                .end().find('[data-column-id="totalPayment"]').text(totalPayment.toLocaleString(undefined, fractionDigits))
+                                .end().find('[data-column-id="totalSurcharge"]').text(totalSurcharge.toLocaleString(undefined, fractionDigits))
+                                .end().find('[data-column-id="bsdTotalAccout"]').text(bsdTotalAccout.toLocaleString(undefined, fractionDigits))
+                                .end().find('[data-column-id="bsdTotalPayment"]').text(bsdTotalPayment.toLocaleString(undefined, fractionDigits))
+                                .end().find('[data-column-id="bsdTotalPaymentCash"]').text(bsdTotalPaymentCash.toLocaleString(undefined, fractionDigits))
+                                .end().find('[data-column-id="variance"]').text(variance);
+
+
+                            $('#modal-confirm')
+                                .find(".maskmoney").val("")
+                                .end().find('[data-column-id="erP_ID"]').text(result.erP_ID || 'N\A')                                    
+                                .end().find('[data-column-id="branchID"]').text(branch)
+                                .end().find('[data-column-id="reportDate"]').text(moment(reportDate).format("DD/MM/YYYY"))
+                                .end().find(".maskmoney").val("0.00")
+                                .end().find('input[name="Branch"]').val(branch)
+                                .end().find('input[name="ReportDate"]').val(reportDate)
+
+                                .end().find('input[name="Comm"]').val(result.bonusCommission)
+                                .end().find('input[name="adjCreditCard"]').val(result.adjCreditCard)
+                                .end().find('input[name="Other"]').val(result.adjOther)
+                                .end().find('input[name="Return"]').val(result.returnCharge)
+                                .end().find('input[name="Suspensse"]').val(result.suspense)
+                                .end().find('input[name="WithHoldingTax"]').val(result.withHoldingTax)
+                                .end().find('input[name="Promotion"]').val(result.promotion)
+                                .end().find('input[name="bankCharge"]').val(result.bankCharge)
+                                .end().find('input[name="adjLinePay"]').val(result.adjLinePay)
+
+                                .end().find('input[name="CommRemark"]').val(result.bonusCommissionRemark)
+                                .end().find('input[name="adjCreditCardRemark"]').val(result.adjCreditCardRemark)
+                                .end().find('input[name="OtherRemark"]').val(result.adjOtherRemark)
+                                .end().find('input[name="ReturnRemark"]').val(result.returnChargeRemark)
+                                .end().find('input[name="SuspensseRemark"]').val(result.suspenseRemark)
+                                .end().find('input[name="WithHoldingTaxRemark"]').val(result.withHoldingTaxRemark)
+                                .end().find('input[name="PromotionRemark"]').val(result.promotionRemark)
+                                .end().find('input[name="BankChargeRemark"]').val(result.bankChargeRemark)
+                                .end().find('input[name="adjLinePayRemark"]').val(result.adjLinePayRemark)
+
+                                .end().find('[data-column-id="CheckReconcile"]').text(result.checkReconcile)
+
+                                .end().find('input').prop("disabled", (command == "view"))
+                                .end().find('button[type="submit"]').css("display", function () {
+                                    return command == "view" ? "none" : "inline-block";
+                                })
+                                .end().find('#VerifyDate').data('min-date', moment(reportDate))
+                                .end().modal("show");
+
+
+
+                            $.pageLoader("hide");
+
+                            if (result.checkReconcile === 0) {
+                                $("#check-cross").show();
+                                $("#check-check").hide();
+                                $("#check-minus").hide();
+                            } else if (result.checkReconcile === 1) {
+                                $("#check-cross").hide();
+                                $("#check-check").show();
+                                $("#check-minus").hide();
+                            } else {
+                                $("#check-cross").hide();
+                                $("#check-check").hide();
+                                $("#check-minus").show();
+                            }
+                        }
+                        else {
+                            var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                            swal("Error", message, "error");
+                            return false;
+                        }
+                    });
+
+                });
+            }).on("loaded.rs.jquery.bootgrid", function () {
+                gridSearchResults_unmatch.find('[data-command="bankCharge"]').on('click', function () {
+                    var that = this,
+                        id = $(this).data("row-id"),
+                        branch = $(this).data("row-branch"),
+                        reportDate = $(this).data("row-report-date"),
+                        variance = $(this).data("row-variance")
+                    console.log(variance + 'bankChage');
+                    console.log($(this));
+                    swal({
+                        title: "Are you sure?",
+                        text: "Confirm this select to adjust as Bank Charge.",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonClass: "btn-outline-primary",
+                        confirmButtonText: "Yes, Verify it!",
+                        closeOnConfirm: false
+                    }, function () {
+                        $.post("BankCharge", {
+                            id: id,
+                            branch: branch,
+                            reportDate: reportDate,
+                            variance: variance
+                        }, function (response) {
+                            if (response.success) {
+                                swal({ title: "Verified ", text: "Save Success!", type: "success" },
+                                    function () {
+                                         $("#card-unmatch-results").hide();
+                                         $("#card-match-results").hide();
+                                         $("#card-notfound-results").hide();
+                                        var BranchIdList = $('#BranchList').val();
+                                        var DateFrom = $('#SearchDateFrom').val();
+                                        var DateTo = $('#SearchDateTo').val();
+                                        $.ajax({
+                                            type: "POST",
+                                            url: "Bill",
+                                            data: JSON.stringify({BranchIdList: BranchIdList, DateFrom: DateFrom, DateTo: DateTo }),
+                                            contentType: "application/json; charset=utf-8",
+                                            dataType: "json",
+                                            processData: false,
+                                            success: function (response) {
+                                                console.log(response.data)
+                                                console.log(response.data["result"])
+                                                $('#matchBranch').text("Transaction match " + response.data["result"][0]["matchBranch"] + " Branch")
+                                                $('#matchPercent').text( response.data["result"][0]["matchPercent"] + " %")
+                                                $('#noFoundBranch').text("Transfer or wrong data " + response.data["result"][0]["noFoundBranch"] + " Branch")
+                                                $('#noFoundPercent').text(response.data["result"][0]["noFoundPercent"] + " %")
+                                                $('#unmatchBranch').text("Transaction unmatch " + response.data["result"][0]["unmatchBranch"] + " Branch")
+                                                $('#unmatchPercent').text(response.data["result"][0]["unmatchPercent"] + " %")
+                                                //
+
+                                            },
+                                            error: function (e) {
+                                                swal("Oops!", "Can't Upload Excel", "error")
+                                                return false;
+                                            }
+
+                                        });
+                                    }
+                                );
+                            }
+                            else {
+                                var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                                swal("Error", message, "error");
+                                return false;
+                            }
+                        });
+                    });
+                })
+            }).on("loaded.rs.jquery.bootgrid", function () {
+                gridSearchResults_unmatch.find('[data-command="shortage"]').on('click', function () {
+                    var that = this,
+                        id = $(this).data("row-id"),
+                        branch = $(this).data("row-branch"),
+                        reportDate = $(this).data("row-report-date"),
+                        variance = $(this).data("row-variance")
+                    swal({
+                        title: "Are you sure?",
+                        text: "Confirm this select to adjust as Shortage.",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonClass: "btn-outline-primary",
+                        confirmButtonText: "Yes, Verify it!",
+                        closeOnConfirm: false
+                    }, function () {
+                        $.post("Shortage", {
+                            id: id,
+                            branch: branch,
+                            reportDate: reportDate,
+                            variance: variance
+                        }, function (response) {
+                            if (response.success) {
+                                swal({ title: "Verified", text: "Save Success!", type: "success" },
+                                    function () {
+                                         $("#card-unmatch-results").hide();
+                                         $("#card-match-results").hide();
+                                         $("#card-notfound-results").hide();
+                                        var BranchIdList = $('#BranchList').val();
+                                        var DateFrom = $('#SearchDateFrom').val();
+                                        var DateTo = $('#SearchDateTo').val();
+                                        $.ajax({
+                                            type: "POST",
+                                            url: "Bill",
+                                            data: JSON.stringify({BranchIdList: BranchIdList, DateFrom: DateFrom, DateTo: DateTo }),
+                                            contentType: "application/json; charset=utf-8",
+                                            dataType: "json",
+                                            processData: false,
+                                            success: function (response) {
+                                                console.log(response.data)
+                                                console.log(response.data["result"])
+                                                $('#matchBranch').text("Transaction match " + response.data["result"][0]["matchBranch"] + " Branch")
+                                                $('#matchPercent').text( response.data["result"][0]["matchPercent"] + " %")
+                                                $('#noFoundBranch').text("Transfer or wrong data " + response.data["result"][0]["noFoundBranch"] + " Branch")
+                                                $('#noFoundPercent').text(response.data["result"][0]["noFoundPercent"] + " %")
+                                                $('#unmatchBranch').text("Transaction unmatch " + response.data["result"][0]["unmatchBranch"] + " Branch")
+                                                $('#unmatchPercent').text(response.data["result"][0]["unmatchPercent"] + " %")
+                                                //
+
+                                            },
+                                            error: function (e) {
+                                                swal("Oops!", "Can't Upload Excel", "error")
+                                                return false;
+                                            }
+
+                                        });
+                                    }
+                                );
+                            }
+                            else {
+                                var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                                swal("Error", message, "error");
+                                return false;
+                            }
+                        });
+                    });
+                })
+            });
+            $("#card-unmatch-results").delay(500).fadeIn(300);
+            $("#card-unmatch-results").show();
+            $("#card-match-results").hide();
+            $("#card-notfound-results").hide();
+        } else {
+            $("#card-unmatch-results").show();
+            $("#card-match-results").hide();
+            $("#card-notfound-results").hide();
+            gridSearchResults_unmatch.bootgrid("reload");
+        }
+     });
+
+    $('#notfounddata').on('click', function () {
+        if (searchFirstTime_nf) {
+
+            searchFirstTime_nf = false;
+            gridSearchResults_nf = $("#grid-notfound").bootgrid({
+                ajaxSettings: {
+                    method: "POST",
+                    contentType: "application/json",
+                },
+                url: 'GetDataBill',
+                requestHandler: function (request) {
+                    var BranchIdList = $('#BranchList').val();
+                    var DateFrom = $('#SearchDateFrom').val();
+                    var DateTo = $('#SearchDateTo').val();
+                    var MatchStatus = 2;
+
+                    request = {
+                        BranchIdList: BranchIdList,
+                        DateFrom: DateFrom,
+                        DateTo: DateTo,
+                        MatchStatus: MatchStatus,
+                        // Pagination
+                        page: request.current,
+                        perPage: request.rowCount,
+                        orderBy: null,
+                        orderDirection: null
+                    };
+
+                    $("#grid-notfound").data("export-params", request);
+
+                    return JSON.stringify(request);
+                },
+                sorting: false,
+                selection: true,
+                multiSelect: true,
+                templates: {
+                    header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static">@SharedLocalizer["Search Results"]</h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20">@if (true) { <buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-search-results">@SharedLocalizer["Export (Excel)"]</buttom>}@if (false) { <buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="pdf" data-ke-target="#grid-search-results"><i class="ion-document-text"></i> @SharedLocalizer["Export (PDF)"]</buttom>}</div></div></div></div>',
+                },
+                formatters: {
+
+                    checkCloseShop: function (column, row) {
+                        console.log(row)
+                        var chkcloseshop = row.checkCloseShop == true ? '<div class="text-danger"> <b>Wrong data</b></div>' : '<div class="text-danger"><i class="ion-android-warning"></i> Wrong data</div>'
+                        return chkcloseshop;
+                    },
+                    reconcileMatch: function (column, row) {
+                        var match = row.reconcileMatch == 2 ? '<div class="text-danger"><i class="icon ion-ios-close-outline"></i>  <b>No Transfer</b></div>' : '<div class="text-danger"><i class="ion-android-warning"></i> No Transfer</div>'
+                        return match;
+                    },
+                    erpid: function (column, row) {
+                        var chkerp = row.erP_ID  == null ? '-' : row.erP_ID
+                        return chkerp
+                    }, transfer: function (column, row) {
+                        var chktf= row.transfer == null ? '0' : row.transfer
+                        return chktf
+                    }
+                }
+            })
+
+            $("#card-notfound-results").delay(500).fadeIn(300);
+            $("#card-unmatch-results").hide();
+            $("#card-match-results").hide();
+        } else {
+            gridSearchResults_nf.bootgrid("reload");
+            $("#card-notfound-results").show();
+            $("#card-unmatch-results").hide();
+            $("#card-match-results").hide();
+        }
+
+
+        for(var i=0; i < gridSearchResults_nf.length; i++){
+        console.log(gridSearchResults_nf[i]['Id'] + " => " + tblData[i]['Order_number'] );
+        if(tblData[i]['Id'] == rowSelected){
+        loadClient(tblData[i]['Order_number']);
+        break; 
+    }
+}  
+    });
+    $("#form-detail").validate({
+                submitHandler: function (form) {
+                    var $form = $(form),
+                        type = $form.data("type"),
+                        text = type == "verify" ? "Verify" : "Confirm",
+                        textAfter = type == "verify" ? "Verified" : "Confirmed";
+
+                    swal({
+                        title: "Are you sure?",
+                        text: text + " this information to be recorded",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonClass: "btn-outline-primary",
+                        confirmButtonText: "Yes, " + text + " it!",
+                        closeOnConfirm: false
+                    }, function () {
+                        var $form = $(form),
+                            id = $form.data("row-id");
+
+                        var getVal = function (selector) {
+                            return parseFloat($form.find(selector).val().replace(/[^\d\.\-]/g, ""))
+                        }
+
+                        $.post("EditAdjust", {
+                            Type: type,
+                            Branch: $form.find('input[name="Branch"]').val(),
+                            ReportDate: $form.find('input[name="ReportDate"]').val(),
+                            VerifyDate: $form.find('input[name="VerifyDate"]').val(),
+                            RemittanceDate: $form.find('input[name="RemittanceDate"]').val(),
+
+                            // Money
+                            Comm: getVal('input[name="Comm"]'),
+                            AdjCreditCard: getVal('input[name="AdjCreditCard"]'),
+                            Other: getVal('input[name="Other"]'),
+                            Return: getVal('input[name="Return"]'),
+                            Suspensse: getVal('input[name="Suspensse"]'),
+                            WithHoldingTax: getVal('input[name="WithHoldingTax"]'),
+                            Promotion: getVal('input[name="Promotion"]'),
+                            BankCharge: getVal('input[name="BankCharge"]'),
+                            AdjLinePay: getVal('input[name="AdjLinePay"]'),
+                            AdjLinePay: getVal('input[name="AdjLinePay"]'),
+                            Project: getVal('input[name="Project"]'),
+
+                            // Remark
+                            CommRemark: $form.find('input[name="CommRemark"]').val(),
+                            AdjCreditCardRemark: $form.find('input[name="AdjCreditCardRemark"]').val(),
+                            OtherRemark: $form.find('input[name="OtherRemark"]').val(),
+                            ReturnRemark: $form.find('input[name="ReturnRemark"]').val(),
+                            SuspensseRemark: $form.find('input[name="SuspensseRemark"]').val(),
+                            WithHoldingTaxRemark: $form.find('input[name="WithHoldingTaxRemark"]').val(),
+                            PromotionRemark: $form.find('input[name="PromotionRemark"]').val(),
+                            BankChargeRemark: $form.find('input[name="BankChargeRemark"]').val(),
+                            AdjLinePayRemark: $form.find('input[name="AdjLinePayRemark"]').val(),
+                            ProjectRemark: $form.find('input[name="ProjectRemark"]').val(),
+                        }, function (response) {
+                                if (response.success) {
+                                    swal({ title: "Verified ", text: "Save Success!", type: "success" },
+                                        function () {
+
+                                         $("#card-unmatch-results").hide();
+                                         $("#card-match-results").hide();
+                                         $("#card-notfound-results").hide();
+                                         $('#modal-confirm').modal('toggle');
+                                        var BranchIdList = $('#BranchList').val();
+                                        var DateFrom = $('#SearchDateFrom').val();
+                                        var DateTo = $('#SearchDateTo').val();
+                                             $.ajax({
+                                                 type: "POST",
+                                                 url: "Bill",
+                                                 data: JSON.stringify({ BranchIdList: BranchIdList, DateFrom: DateFrom, DateTo: DateTo }),
+                                                 contentType: "application/json; charset=utf-8",
+                                                 dataType: "json",
+                                                 processData: false,
+                                                 success: function (response) {
+                                                     console.log(response.data)
+                                                     console.log(response.data["result"])
+                                                     $('#matchBranch').text("Transaction match " + response.data["result"][0]["matchBranch"] + " Branch")
+                                                     $('#matchPercent').text(response.data["result"][0]["matchPercent"] + " %")
+                                                     $('#noFoundBranch').text("Transfer or wrong data " + response.data["result"][0]["noFoundBranch"] + " Branch")
+                                                     $('#noFoundPercent').text(response.data["result"][0]["noFoundPercent"] + " %")
+                                                     $('#unmatchBranch').text("Transaction unmatch " + response.data["result"][0]["unmatchBranch"] + " Branch")
+                                                     $('#unmatchPercent').text(response.data["result"][0]["unmatchPercent"] + " %")
+                                                     //
+
+                                                 },
+                                                 error: function (e) {
+                                                     swal("Oops!", "Can't Upload Excel", "error")
+                                                     return false;
+                                                 }
+
+                                             });
+                                    }
+                                 );
+                            }
+                            else {
+                                var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                                swal("Error", message, "error");
+                                return false;
+                            }
+                        });
+                    });
+                }
+    });
+
+    $("body").on("click", '[data-ke-action="export"]', function (e) {
+                var $this = $(this),
+                    $target = $($this.data("ke-target")),
+                    params = $target.data("export-params"),
+                    filetype = $this.data("ke-filetype"),
+                    type = $this.data("ke-type");
+
+                params.filetype = filetype;
+                params.type = type;
+
+                var form = $('<form/>');
+                form.attr('action', endpoint + 'DailyRevenueVerify/Get').attr('method', 'POST').attr('target', '_blank');
+
+        $.each(params, function (k, v) {
+            console.log(k)
+                    if (typeof v !== 'undefined') {
+                        $(form).append($('<input name="' + k + '" value="' + v + '" type="hidden">'));
+                    }
+                });
+
+                $('body').append(form);
+
+                form.submit();
+                form.remove();
+            });
+    </script>
+}
+@await Html.PartialAsync("FormSearch/_TypeBranchBillPaymentDateFromDateToPartial")
+<div class="row">
+    <div class="col-sm-6 col-md-4">
+        <div class="card card-icon">
+            <div class="card-body card-padding-sm bg-m-green text-m-white">
+                <div class="row">
+                    <div class="col-md-6" style="font-size:60px">
+                        <i class="icon ion-ios-checkmark-outline"></i>
+                    </div>
+                    <div class="col-md-6" style="text-align:right;">
+                        <h1 id="matchPercent"> 0 % </h1>
+                    </div>
+                </div>
+                <div style="text-align:right; padding-bottom:3px">
+                    <h5 id="matchBranch">Transaction match 0 Branch</h5>
+                </div>
+                <div style="text-align:left;">
+                    <button class="form-control" type="button" id="match">View Detail</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-4">
+        <div class="card card-icon">
+            <div class="card-body card-padding-sm bg-m-amber text-m-white">
+                <div class="row">
+                    <div class="col-md-6" style="font-size:60px">
+                        <b><i class="icon ion-ios-help-outline"></i></b>
+                    </div>
+                    <div class="col-md-6" style="text-align:right;">
+                        <h1 id="unmatchPercent"> 0 % </h1>
+                    </div>
+                </div>
+                <div style="text-align:right; padding-bottom:3px">
+                    <h5 id="unmatchBranch">Transaction unmatch 0 Branch</h5>
+                </div>
+                <div>
+                    <button type="button" class="form-control" id="unmatch">View Detail</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-4">
+        <div class="card card-icon">
+            <div class="card-body card-padding-sm bg-m-red text-m-white">
+                <div class="row">
+                    <div class="col-md-6" style="font-size:60px">
+                        <b><i class="icon ion-ios-close-outline"></i></b>
+                    </div>
+                    <div class="col-md-6" style="text-align:right;">
+                        <h1 id="noFoundPercent"> 0 % </h1>
+                    </div>
+                </div>
+                <div style="text-align:right; padding-bottom:3px">
+                    <h5 id="noFoundBranch">No transfer or wrong data</h5>
+                </div>
+                <div>
+                    <button type="button" class="form-control" id="notfounddata">View Detail</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<div id="card-match-results" class="card" style="display: none;">
+    <div class="card-body table-responsive">
+        <div>
+            <table id="grid-match" class="table table-card table-bordered table-condensed table-hover unordered">
+                <thead>
+                    <tr class="bg-m-amber bg-m-lighten-5">
+                        <th data-column-id="id" data-identifier="true" data-visible="false" data-visible-in-selection="false"></th>
+                        <th data-column-id="erpid" data-formatter="erpid" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["ERP ID"]</th>
+                        <th data-column-id="branchID" data-css-class="bg-m-blue bg-m-lighten-5" data-identifier="true" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["Branch"]</th>
+                        <th data-column-id="reportDate" data-type="date" data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Report date"]</th>
+                        <th data-column-id="commands" data-formatter="commands" data-css-class="text-center text-nowrap" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@Localizer["Commands"]</th>
+                        <th data-column-id="checkCloseShop" data-formatter="checkCloseShop" data-css-class="text-center text-nowrap" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@Localizer["Check Close Shop"]</th>
+                        <th data-column-id="eod" data-css-class="text-center" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@Localizer["Close Shop"]</th>
+                        <th data-column-id="dailyRevenue" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Revenue"]</th>
+                        <th data-column-id="transfer" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Tranfer"]</th>
+                        <th data-column-id="reconcileMatch" data-formatter="reconcileMatch" data-css-class="text-center text-nowrap" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Reconcile"]</th>
+                        <th data-column-id="variance" data-type="decimal" data-formatter="variance" data-css-class="text-center" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@Localizer["Variance"]</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        <div class="container-fluid m-l-15 m-b-15">
+            <button class="btn btn-primary" data-toggle="modal" data-target="#comfirm">Confirm Verify</button>
+        </div>
+    </div>
+</div>
+<div id="card-unmatch-results" class="card" style="display: none;">
+    <div class="card-body table-responsive">
+        <div>
+            <table id="grid-unmatch" class="table table-card table-bordered table-condensed table-hover unordered">
+                <thead>
+                    <tr class="bg-m-amber bg-m-lighten-5">
+                        <th data-column-id="erpid" data-formatter="erpid" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["ERP ID"]</th>
+                        <th data-column-id="branchID" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["Branch"]</th>
+                        <th data-column-id="reportDate" data-type="date" data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Report date"]</th>
+                        <th data-column-id="commands" data-formatter="commands" data-css-class="text-center text-nowrap" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@Localizer["Commands"]</th>
+                        <th data-column-id="checkCloseShop" data-formatter="checkCloseShop" data-css-class="text-center" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">CheckClose Shop</th>
+                        <th data-column-id="eod" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Close Shop"]</th>
+                        <th data-column-id="dailyRevenue" data-type="decimal" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Revenue"]</th>
+                        <th data-column-id="transfer" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Tranfer"]</th>
+                        <th data-column-id="reconcileMatch" data-formatter="reconcileMatch" data-css-class="text-center" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@Localizer["Reconcile"]</th>
+                        <th data-column-id="variance" data-type="decimal" data-formatter="verifyTranfer" data-css-class="text-center" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">Variance</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+<div id="card-notfound-results" class="card" style="display: none;">
+    <div class="card-body table-responsive">
+        <div>
+            <table id="grid-notfound" class="table table-card table-bordered table-condensed table-hover unordered">
+                <thead>
+                    <tr class="bg-m-amber bg-m-lighten-5">
+                        <th data-column-id="erpid" data-formatter="erpid" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["ERP ID"]</th>
+                        <th data-column-id="branchID" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["Branch"]</th>
+                        <th data-column-id="reportDate" data-type="date" data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Report date"]</th>
+                        <th data-column-id="checkCloseShop" data-formatter="checkCloseShop" data-css-class="text-center" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">Check Close Shop</th>
+                        <th data-column-id="eod" data-type="decimal" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Close Shop"]</th>
+                        <th data-column-id="dailyRevenue" data-type="decimal" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Revenue"]</th>
+                        <th data-column-id="transfer" data-formatter="transfer" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Tranfer"]</th>
+                        <th data-column-id="reconcileMatch" data-formatter="reconcileMatch" data-css-class="text-center" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@Localizer["Reconcile"]</th>
+                        <th data-column-id="variance" data-type="decimal" data-formatter="variance" data-css-class="text-center" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">Variance</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="comfirm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" style="padding-top:300px;">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Confirm this select to be recordede</h5>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12 ml-auto">
+                        <div class="form-group">
+                            <label class="control-label">Verify Date</label>
+                            <div class="input-group-icon">
+                                <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                                <input name="DateFrom" id="Verifydate" class="form-control input-mask" data-mask="00/00/0000" value="@DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 ml-auto">
+                        <div class="form-group">
+                            <label class="control-label">Remittance Date</label>
+                            <div class="input-group-icon">
+                                <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                                <input name="DateTo" id="RemittanceDate" class="form-control input-mask" data-mask="00/00/0000" value="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" data-command="confirm-select">Verify</button>
+            </div>
+        </div>
+    </div>
+</div>
+@await Html.PartialAsync("Modal/_EditAdjustments")

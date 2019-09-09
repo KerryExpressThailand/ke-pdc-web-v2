@@ -1,0 +1,346 @@
+﻿@{
+    ViewData["Action"] = "confirmfc";
+    ViewData["Type"] = "fc";
+    ViewData["Title"] = "Summary Commission for FC";
+}
+
+@section links {
+    <link rel="stylesheet" href="~/lib/bootstrap-select/dist/css/bootstrap-select.css" />
+    <link rel="stylesheet" href="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.css" />
+    <link rel="stylesheet" href="~/assets/stylesheets/confirm.css" />
+}
+
+@section scripts {
+    <script src="~/lib/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.js"></script>
+    <script src="~/lib/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+    <script src="~/lib/jquery-maskmoney/dist/jquery.maskMoney.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/moment/min/moment-with-locales.min.js"></script>
+    <script src="~/lib/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/lib/bootstrap-tagsinput/dist/bootstrap-tagsinput.js"></script>
+    <script src="~/lib/matchheight/dist/jquery.matchHeight-min.js"></script>
+    <script src="~/assets/javascripts/bootstrap-select-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootgrid-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootstrap-datetimepicker.js"></script>
+    <script src="~/assets/javascripts/jquery.validation-default.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            // FORM SEARCH
+            // ======================
+            var searchFirstTime = true;
+            var gridSearchResults;
+
+            $('[type=reset]').click(function (e) {
+                e.preventDefault();
+                $(this).closest('form').get(0).reset();
+                $("select").selectpicker('render');
+            });
+
+            var PKG = {
+                @foreach (var package in ViewData["PackageAll"] as List<Package>) {
+                    @:'@package.PackageID': "@package.PackageDesc",
+                }
+            };
+
+            $("#modalSummaryCommissionDetail").on("click", '[data-command="ItemDetail"]', function () {
+                $("#modalSummaryCommissionItemDetail").find("tbody tr").remove();
+
+                $.each($(this).data("row"), function (key, value) {
+                    var attachment = '<button type="button" class="btn btn-xs btn-default" disabled><i class="ion-android-download"></i> Download File</button>';
+
+                    attachment = "";
+
+                    if (value.attachment != null) {
+                        var path = endpoint + 'MonthlyExpense/' + value.year + "/" + value.month + "/" + value.branchID + "/" + value.categoryID + "/" + value.attachment
+                        attachment = '<a target="_blank" href="' + path + '" class="btn btn-xs btn-outline-primary"><i class="ion-android-download"></i> Download File</a>';
+                    }
+
+                    $("#modalSummaryCommissionItemDetail").find("tbody").append('<tr>'
+                        + '<td>' + (PKG[value.itemDesc] || value.itemDesc) + '</td>'
+                        + '<td>' + value.itemAmount.toLocaleString() + '</td>'
+                        + '<td>' + value.itemExpense.toLocaleString(undefined, { minimumFractionDigits: 2 }) + '</td>'
+                        + '<td></td>'
+                        + '<td>' + attachment + '</td>'
+                        + '</tr>');
+                });
+                $("#modalSummaryCommissionItemDetail")
+                .find(".modal-title").text($(this).data("name"))
+                .end().modal({ backdrop: false }).modal("show");
+            });
+
+            $('form[data-toggle="search"]').validate({
+                submitHandler: function (form) {
+                    $.pageLoader("show");
+                    var $form = $(form);
+
+                    if (searchFirstTime) {
+
+                        searchFirstTime = false;
+
+                        gridSearchResults = $("#grid-search-results").bootgrid({
+                            url: endpoint + "MonthlyCommission",
+                            requestHandler: function (request) {
+                                var BranchList = $form.find('select[name="BranchList"]').val(),
+                                    request = {
+                                        BranchList: typeof BranchList == "object" ? BranchList.join(",") : BranchList,
+                                        MonthYear: $form.find('input[name="MonthYear"]').val(),
+
+                                        // Pagination
+                                        page: request.current,
+                                        perPage: request.rowCount,
+                                        order: Object.keys(request.sort)[0],
+                                        direction: request.sort[Object.keys(request.sort)[0]],
+                                        searchPhrase: request.searchPhrase,
+                                    };
+
+                                $("#grid-search-results").data("export-params", request);
+
+                                return request;
+                            },
+                            sorting: false,
+                            templates: {
+                                header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static">@SharedLocalizer["Search Results"]</h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20"><buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-search-results">@SharedLocalizer["Export (Excel)"]</buttom><buttom class="btn btn-default hidden" data-ke-action="export" data-ke-filetype="pdf" data-ke-target="#grid-search-results"><i class="ion-document-text"></i> @SharedLocalizer["Export (PDF)"]</buttom></div></div></div></div>',
+                            },
+                            formatters: {
+                                decimal: function (column, row) {
+                                    return row[column.id] == null ? "-" : column.converter.to(row[column.id]);
+                                },
+                                commands: function (column, row) {
+                                    var btnConfirm = ' <button class="btn btn-xs btn-default" disabled><i class="ion-checkmark-round"></i> @Localizer["Confirm"]</button>';
+
+                                    if (row.feeManagementVerifyDate == null || row.feeItVerifyDate == null || row.feeSupplyVerifyDate == null || row.feeFacilityVerifyDate == null || row.salesPackageVerifyDate == null) {
+                                        var btnConfirm = ' <button class="btn btn-xs btn-default pending" disabled><i class="ion-checkmark-round"></i> @Localizer["Confirm"]</button>';
+                                    }
+                                    else if (row.fcConfirmDate == null) {
+                                        btnConfirm = ' <button class="btn btn-xs btn-outline-success" data-command="confirm" data-row-branch="' + row.branchID + '"><i class="ion-checkmark-round"></i> @Localizer["Confirm"]</button>';
+                                    }
+
+                                    return '<button class="btn btn-xs btn-default" data-command="view" data-row-branch="' + row.branchID + '"><i class="ion-search"></i> @Localizer["View"]</button>'
+                                        + btnConfirm;
+                                },
+                                status: function (column, row) {
+                                    if (row.feeManagementVerifyDate == null || row.feeItVerifyDate == null || row.feeSupplyVerifyDate == null || row.feeFacilityVerifyDate == null || row.salesPackageVerifyDate == null) {
+                                        return '<span data-id="status" class="text-warning">Pending</span>';
+                                    }
+                                    else if (row.fcConfirmDate == null) {
+                                        return '<span data-id="status"></span>';
+                                    }
+                                    else {
+                                        return '<span data-id="status" class="text-success">Confirmed</span>';
+                                    }
+                                },
+                            }
+                        })
+                        .on("loaded.rs.jquery.bootgrid", function () {
+                            $.pageLoader("hide");
+
+                            $(this)
+                            .find('[data-toggle="tooltip"]').tooltip({
+                                container: "body",
+                            })
+                            .end().find('[data-command="confirm"]').on("click", function () {
+                                var that = this,
+                                    branch = $(that).data("row-branch");
+
+                                swal({
+                                    title: "Are you sure?",
+                                    text: "Confirm this information to be recorded",
+                                    type: "warning",
+                                    showCancelButton: true,
+                                    confirmButtonClass: "btn-outline-primary",
+                                    confirmButtonText: "Yes, confirm it!",
+                                }, function () {
+                                    $.pageLoader("show");
+                                    $.post(endpoint + "MonthlyCommission/Verify", {
+                                        BranchID: typeof branch == "object" ? branch.join(",") : branch,
+                                        MonthYear: $("#grid-search-results").data("export-params").MonthYear,
+                                    }, function (response) {
+                                        $.pageLoader("hide");
+                                        if (response.success) {
+                                            gridSearchResults.find('tr[data-row-id="' + branch + '"]')
+                                            .addClass("bg-m-gray bg-m-lighten-3 text-m-gray")
+                                            .find('[data-command="confirm"]').prop("disabled", true).removeClass("btn-outline-success").addClass("btn-default");
+                                            end().find('[data-id="status"]').addClass("text-success").text("Confirmed");
+
+                                            swal("Confirmed", response.messages[0], "success");
+                                        }
+                                        else {
+                                            var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                                            swal("Error", message, "error");
+                                            return false;
+                                        }
+                                    });
+                                });
+
+                            })
+                            .end().find('[data-command="view"]').on("click", function () {
+                                var that = this,
+                                    branch = $(that).data("row-branch");
+
+                                $.pageLoader("show");
+
+                                $("#modalSummaryCommissionDetail").data("row-branch", branch);
+
+                                $.get(endpoint + "MonthlyCommission/" + branch, {
+                                    MonthYear: $("#grid-search-results").data("export-params").MonthYear,
+                                }, function (response) {
+                                    var result = response.result[0];
+                                    if (response.success) {
+                                        var category = {
+                                            1: [],
+                                            2: [],
+                                            3: [],
+                                            4: [],
+                                            5: [],
+                                            6: [],
+                                        };
+                                        $('#modalSummaryCommissionDetail').find('[data-column-id]').text("-");
+
+                                        $.each(result, function (key, value) {
+                                            var $e = $("#modalSummaryCommissionDetail").find('[data-column-id="' + key + '"]'),
+                                                type = $e.data("type"),
+                                                textValue = "-";
+
+                                            if (typeof value == "object" && key == "monthlyExpenseDetail") {
+                                                $.each(value, function (k, v) {
+                                                    category[v.categoryID].push(v);
+                                                });
+                                            }
+                                            else if (typeof value == "string" || typeof value == "number") {
+                                                if (value != null) {
+                                                    switch (type) {
+                                                        case "numeric":
+                                                            textValue = value.toLocaleString();
+                                                            break;
+                                                        case "decimal":
+                                                            textValue = value.toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                            break;
+                                                        case "date":
+                                                            textValue = value == null ? "-" : moment(value).format("L");
+                                                            break;
+                                                        default:
+                                                            textValue = value;
+                                                            break;
+                                                    }
+                                                }
+                                            }
+
+                                            $e.text(textValue);
+                                        });
+
+                                        $('#modalSummaryCommissionDetail [data-id="serviceFeeIT"]').data("row", category[2]);
+                                        $('#modalSummaryCommissionDetail [data-id="serviceFeeSupply"]').data("row", category[3]);
+                                        $('#modalSummaryCommissionDetail [data-id="facility"]').data("row", category[4]);
+                                        $('#modalSummaryCommissionDetail [data-id="salePackage"]').data("row", category[5]);
+
+                                        $('#modalSummaryCommissionDetail').find('[data-id="withoutVatable"], [data-id="withVatable"]').addClass("hidden");
+
+                                        if (result.vatable) {
+                                            $('#modalSummaryCommissionDetail').find('[data-id="withVatable"]').removeClass("hidden");
+                                        }
+                                        else {
+                                            $('#modalSummaryCommissionDetail').find('[data-id="withoutVatable"]').removeClass("hidden");
+                                        }
+
+                                        $('#modalSummaryCommissionDetail')
+                                        .find(".maskmoney").val("")
+                                        .end().find('[data-column-id="branchID"]').text(branch)
+                                        .end().find('[data-column-id="monthYear"]').text($("#grid-search-results").data("export-params").MonthYear)
+                                        .end().modal("show");
+
+                                        $.pageLoader("hide");
+                                    }
+                                    else {
+                                        var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                                        swal("Error", message, "error");
+                                        return false;
+                                    }
+                                });
+                            })
+                            .end().find('button:not(.pending)[disabled]').parents("tr").addClass("bg-m-gray bg-m-lighten-3 text-m-gray");
+                        });
+
+                        $("#card-search-results, #card-search-status").delay(500).fadeIn(300);
+                    }
+                    else {
+                        gridSearchResults.bootgrid("reload");
+                    }
+                }
+            });
+
+            // EXPORT
+            // ======================
+            $("body").on("click", '[data-ke-action="export"]', function (e) {
+                var $this = $(this),
+                    $target = $($this.data("ke-target")),
+                    params = $target.data("export-params"),
+                    filetype = $this.data("ke-filetype");
+
+                params.filetype = filetype;
+                params.Type = 'fc'
+
+                var form = $('<form/>');
+
+                form.attr('action', endpoint + 'MonthlyCommission').attr('method', 'POST').attr('target', '_blank');
+
+
+                $.each(params, function (k, v) {
+                    if (typeof v !== 'undefined') {
+                        $(form).append($('<input name="' + k + '" value="' + v + '" type="hidden">'));
+                    }
+                });
+
+                $('body').append(form);
+
+                form.submit();
+                form.remove();
+            });
+        });
+    </script>
+}
+
+<div class="block-header">
+    <h2 class="block-title">@ViewData["Title"]</h2>
+</div>
+
+@await Html.PartialAsync("Shared/_FormSearchBranchMonthlyPartial")
+
+<div id="card-search-results" class="card" style="display:none;">
+    <div class="card-body table-responsive">
+        <div>
+            <table id="grid-search-results" class="table table-card table-bordered table-condensed table-hover unordered">
+                <thead>
+                    <tr>
+                        <th data-column-id="branchID" data-identifier="true" data-css-class="bg-m-gray bg-m-lighten-4" data-header-css-class="bg-m-gray bg-m-lighten-3">@SharedLocalizer["Branch"]</th>
+                        <th data-column-id="commands" data-formatter="commands" data-css-class="text-center" data-header-css-class="bg-m-gray bg-m-lighten-3" data-header-align="center" data-width="auto;white-space: nowrap !important">@Localizer["Commands"]</th>
+                        <th data-column-id="status" data-formatter="status" data-css-class="text-center" data-header-css-class="bg-m-gray bg-m-lighten-3" data-header-align="center" data-width="auto;white-space: nowrap !important">@Localizer["Status"]</th>
+
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-lime bg-m-lighten-4 text-right" data-css-class="text-right bg-m-lime bg-m-lighten-5" data-column-id="netCommission">@Localizer["Net Commission"]</th>
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-green bg-m-lighten-4 text-right" data-css-class="text-right bg-m-green bg-m-lighten-5" data-column-id="totalCommission">@Localizer["Total Commission"]</th>
+
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-light-green bg-m-lighten-4 text-right" data-css-class="text-right" data-column-id="incomeTotalFreightRevenue">@Localizer["% Freight"]</th>
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-light-green bg-m-lighten-4 text-right" data-css-class="text-right" data-column-id="incomeDHL">@Localizer["DHL (15%)"]</th>
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-light-green bg-m-lighten-4 text-right" data-css-class="text-right" data-column-id="incomeCOD">@Localizer["COD (1%)"]</th>
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-light-green bg-m-lighten-4 text-right" data-css-class="text-right" data-column-id="incomeInsurance">@Localizer["Insur (30%)"]</th>
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-light-green bg-m-lighten-4 text-right" data-css-class="text-right" data-column-id="incomeSameday">@Localizer["BSD (30%)"]</th>
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-light-green bg-m-lighten-4 text-right" data-css-class="text-right" data-column-id="incomeDropoff">@Localizer["Drop Off Rev"]</th>
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-light-green bg-m-lighten-4 text-right" data-css-class="text-right" data-column-id="incomeRTSP">@Localizer["RTSP"]</th>
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-light-green bg-m-lighten-4 text-right" data-css-class="text-right" data-column-id="incomePSP">@Localizer["PSP"]</th>
+
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-orange bg-m-lighten-4 text-right" data-css-class="text-right" data-column-id="expenseCOD">@Localizer["COD Surcharge (3%)"]</th>
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-orange bg-m-lighten-4 text-right" data-css-class="text-right" data-column-id="expenseInsurance">@Localizer["Insurance (70%)"]</th>
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-orange bg-m-lighten-4 text-right" data-css-class="text-right" data-column-id="expenseFeeManagement">@Localizer["Management Fee"]</th>
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-orange bg-m-lighten-4 text-right" data-css-class="text-right" data-column-id="expenseFeeIT">@Localizer["Service Fee - IT"]</th>
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-orange bg-m-lighten-4 text-right" data-css-class="text-right" data-column-id="expenseFeeSupply">@Localizer["Service Fee - Supply"]</th>
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-orange bg-m-lighten-4 text-right" data-css-class="text-right" data-column-id="expenseFeeFacility">@Localizer["Facility"]</th>
+                        <th data-type="decimal" data-formatter="decimal" data-header-align="center" data-width="auto; white-space: nowrap !important" data-header-css-class="bg-m-orange bg-m-lighten-4 text-right" data-css-class="text-right" data-column-id="expenseSalesPackage">@Localizer["Sales Package"]</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("Shared/_ModalSummaryCommissionDetailPartial")

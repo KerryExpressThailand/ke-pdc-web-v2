@@ -1,0 +1,265 @@
+﻿@{
+    ViewData["Title"] = "Daily COD Report";
+}
+
+@section links {
+    <link rel="stylesheet" href="~/lib/bootstrap-select/dist/css/bootstrap-select.css" />
+    <link rel="stylesheet" href="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.css" />
+    <link rel="stylesheet" href="~/assets/stylesheets/confirm.css" />
+}
+
+@section scripts {
+    <script src="~/lib/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.js"></script>
+    <script src="~/lib/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+    <script src="~/lib/jquery-maskmoney/dist/jquery.maskMoney.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/moment/min/moment-with-locales.min.js"></script>
+    <script src="~/lib/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/lib/bootstrap-tagsinput/dist/bootstrap-tagsinput.js"></script>
+    <script src="~/lib/matchheight/dist/jquery.matchHeight-min.js"></script>
+    <script src="~/assets/javascripts/bootstrap-select-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootgrid-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootstrap-datetimepicker.js"></script>
+    <script src="~/assets/javascripts/jquery.validation-default.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            var searchFirstTime = true;
+            var gridSearchResults, gridViewDailyCODDetail;
+
+            $('[type=reset]').click(function (e) {
+                e.preventDefault();
+                $(this).closest('form').get(0).reset();
+                $("select").selectpicker('render');
+            });
+
+            $("#modalViewDailyCODDetail").on("show.bs.modal", function (e) {
+                var BranchID = $(this).data("BranchID"),
+                    DateFrom = $(this).data("DateFrom"),
+                    DateTo = $(this).data("DateTo");
+
+                gridViewDailyCODDetail = $("#gridViewDailyCODDetail").bootgrid({
+                    url: endpoint + "DailyCOD/" + BranchID,
+                    requestHandler: function (request) {
+                        var request = {
+                            BranchID: BranchID,
+                            DateFrom: DateFrom,
+                            DateTo: DateTo,
+
+                            // Pagination
+                            page: request.current,
+                            perPage: request.rowCount,
+                            order: Object.keys(request.sort)[0],
+                            direction: request.sort[Object.keys(request.sort)[0]],
+                            searchPhrase: request.searchPhrase,
+                        };
+
+                        $("#gridViewDailyCODDetail").data("export-params", request);
+
+                        return request;
+                    },
+                    rowCount: [10, 25, 50, 100, 200],
+                    sorting: false,
+                    templates: {
+                        search: ""
+                    },
+                    formatters: {
+                        month: function (column, row) {
+                            return moment(row[column.id]).format("MMMM");
+                        },
+                    },
+                })
+                .on("loaded.rs.jquery.bootgrid", function () {
+                    $.pageLoader("hide");
+                });
+            }).on("hidden.bs.modal", function (e) {
+                $("#gridViewDailyCODDetail").bootgrid("destroy");
+            });
+
+            $("#grid-search-results").on("initialized.rs.jquery.bootgrid", function () {
+                var dateFrom = $("#form-search").find('input[name="DateFrom"]').val(),
+                    dateTo = $("#form-search").find('input[name="DateTo"]').val();
+
+                $(this)
+                .find('[data-column-id=\"branchID\"], [data-column-id=\"erpid\"], [data-column-id=\"commands\"]').remove()
+                .end().find("thead").prepend('<tr><th class=\"bg-m-blue bg-m-lighten-4\" style=\"vertical-align: middle;\" rowspan=\"2\">Branch</th><th class=\"bg-m-gray bg-m-lighten-2\" style=\"vertical-align: middle;\" rowspan=\"2\">ERP ID</th><th class=\"text-center bg-m-amber bg-m-lighten-4\" style=\"vertical-align: middle;\" rowspan=\"2\">Commands</th><th data-column-id=\"dateFromTo\" class=\"text-center bg-m-blue bg-m-lighten-4\" colspan=\"4\" style=\"border-right: 1px solid #BBDEFB;\">' + dateFrom + ' to ' + dateTo + '</th><th data-column-id=\"dateTo\" class=\"text-center bg-m-green bg-m-lighten-4\" colspan=\"4\">As of ' + dateTo + '</th></tr>');
+            });
+
+            // FORM SEARCH
+            // ======================
+            $("#form-search").validate({
+                submitHandler: function (form) {
+                    $.pageLoader("show");
+                    var $form = $(form);
+
+                    if (searchFirstTime) {
+
+                        searchFirstTime = false;
+
+                        gridSearchResults = $("#grid-search-results").bootgrid({
+                            url: endpoint + "DailyCOD",
+                            requestHandler: function (request) {
+                                var BranchList = $form.find('select[name="BranchList"]').val(),
+                                    request = {
+                                        BranchType: $form.find('select[name="BranchType"]').val(),
+                                        BranchList: typeof BranchList == "object" ? BranchList.join(",") : BranchList,
+                                        DateFrom: $form.find('input[name="DateFrom"]').val(),
+                                        DateTo: $form.find('input[name="DateTo"]').val() || "@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))",
+
+                                        // Pagination
+                                        page: request.current,
+                                        perPage: request.rowCount,
+                                        order: Object.keys(request.sort)[0],
+                                        direction: request.sort[Object.keys(request.sort)[0]],
+                                        searchPhrase: request.searchPhrase,
+                                    };
+
+                                $("#grid-search-results").data("export-params", request);
+
+                                return request;
+                            },
+                            rowCount: [10, 25, 50, 100, 200],
+                            sorting: false,
+                            templates: {
+                                header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static">@SharedLocalizer["Search Results"]</h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20">@if (true) { <buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-search-results">@SharedLocalizer["Export (Excel)"]</buttom>}@if (false) { <buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="pdf" data-ke-target="#grid-search-results"><i class="ion-document-text"></i> @SharedLocalizer["Export (PDF)"]</buttom>}</div></div></div></div>',
+                            },
+                            formatters: {
+                                commands: function (column, row) {
+                                    return '<button class="btn btn-xs btn-default" data-command="view" data-row-id="' + row.branchID + '"><i class="ion-search"></i> View</button>';
+                                },
+                            }
+                        })
+                        .on("loaded.rs.jquery.bootgrid", function () {
+                            var that = this,
+                                DateFrom = gridSearchResults.data("export-params").DateFrom,
+                                DateTo = gridSearchResults.data("export-params").DateTo;
+
+                            $.pageLoader("hide");
+
+                            gridSearchResults
+                            .find('[data-toggle="tooltip"]').tooltip({
+                                container: "body",
+                            })
+                            .end().find('[data-column-id="dateFromTo"]').text(DateFrom + " to " + DateTo)
+                            .end().find('[data-column-id="dateTo"]').text("As of " + DateTo)
+                            .end().find('[data-command="view"]').click(function () {
+                                $("#modalViewDailyCODDetail")
+                                .data("BranchID", $(this).data("rowId"))
+                                .data("DateFrom", DateFrom)
+                                .data("DateTo", DateTo)
+                                .find('[data-column-id="branchID"]').text($(this).data("rowId"))
+                                .end().find('[data-column-id="dateFromTo"]').text(DateFrom + " to " + DateTo)
+                                .end().modal("show");
+                            });
+                        });
+
+                        $("#card-search-results, #card-search-status").delay(500).fadeIn(300);
+                    }
+                    else {
+                        gridSearchResults.bootgrid("reload");
+                    }
+                }
+            });
+
+
+            // EXPORT
+            // ======================
+            $("body").on("click", '[data-ke-action="export"]', function (e) {
+                var $this = $(this),
+                    $target = $($this.data("ke-target")),
+                    params = $target.data("export-params"),
+                    filetype = $this.data("ke-filetype"),
+                    type = $this.data("ke-type");
+
+                var BranchID = params.BranchID;
+
+                if (typeof params === "undefined") {
+                    params = "";
+                }
+                else {
+                    var str = [];
+
+                    for (var p in params) {
+                        if (params.hasOwnProperty(p)) {
+                            str.push(encodeURIComponent(p) + "=" + encodeURIComponent(params[p]));
+                        }
+                    }
+                    params = "&" + str.join("&");
+                }
+
+                var url = endpoint + "DailyCOD" + (type == "detail" ? "/" + BranchID : "") + "?Type=" + type + "&FileType=" + filetype + params;
+
+                if (filetype == "pdf") {
+                    window.open(url, "_blank");
+                }
+                else {
+                    document.location = url;
+                }
+            });
+        });
+
+    </script>
+}
+
+<div class="block-header">
+    <h2 class="block-title">@ViewData["Title"]</h2>
+</div>
+
+@await Html.PartialAsync("FormSearch/_TypeBranchDateFromDateToPartial")
+
+<div id="card-search-results" class="card" style="display: none;">
+    <div class="card-body table-responsive">
+        <div>
+            <table id="grid-search-results" class="table table-card table-bordered table-condensed table-hover unordered">
+                <thead>
+                    <tr class="bg-m-amber bg-m-lighten-5">
+                        <th data-column-id="branchID" data-identifier="true" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["Branch"]</th>
+                        <th data-column-id="erpid" data-css-class="bg-m-gray bg-m-lighten-3" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@Localizer["ERP ID"]</th>
+                        <th data-column-id="commands" data-formatter="commands" data-css-class="text-center text-nowrap" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@Localizer["Commands"]</th>
+                        
+                        <th data-column-id="monthlyCODConsignment" data-type="numeric" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Consignment"]</th>
+                        <th data-column-id="monthlyCODAmount" data-type="decimal" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Amount"]</th>
+                        <th data-column-id="monthlyCODSurcharge" data-type="decimal" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Surcharge"]</th>
+                        <th data-column-id="monthlyAmountPerConsignment" data-type="decimal" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Amount/Con"]</th>
+                        
+                        <th data-column-id="dailyCODConsignment" data-type="decimal" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Consignment"]</th>
+                        <th data-column-id="dailyCODAmount" data-type="decimal" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Amount"]</th>
+                        <th data-column-id="dailyCODSurcharge" data-type="decimal" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Surcharge"]</th>
+                        <th data-column-id="dailyAmountPerConsignment" data-type="decimal" data-header-align="right" data-css-class="text-right" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Amount/Con"]</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="modalViewDailyCODDetail" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Branch #<span data-column-id="branchID"></span>&nbsp;&nbsp;&nbsp;&nbsp;<span data-column-id="dateFromTo"></span></h4>
+            </div>
+            <div class="modal-body">
+                <table id="gridViewDailyCODDetail" class="table table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th data-column-id="consignment" data-identifier="true" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["Consignment"]</th>
+                            <th data-column-id="accountID">@Localizer["Account No"]</th>
+                            <th data-column-id="codAmount" data-type="decimal" data-header-align="right" data-css-class="text-right">@Localizer["COD Amount"]</th>
+                            <th data-column-id="pickupDate" data-formatter="month">@Localizer["Month"]</th>
+                            <th data-column-id="pickupDate" data-type="datetime">@Localizer["Pickup Date"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <buttom class="btn btn-outline-primary" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#gridViewDailyCODDetail" data-ke-type="detail">@SharedLocalizer["Export (Excel)"]</buttom>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

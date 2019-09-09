@@ -1,0 +1,32 @@
+public void Test_KEEDI_POST_ShopMember()
+        {
+            using (var posEDIServiceClient = new POSEDIServiceClient())
+            {
+                var input = new KEEDI_POS_POST_SHOP_MEMBER_INPUT();
+                input.TokenString = GetTokenPOS("KEEDI_GET_ShopMember", "admin", "admin");
+                input.User = "admin";
+                input.Password = "admin";
+                input.AccountName = "Jataporn Pobphimai";
+                input.AccountNo = "ITTEST201702";
+                input.ActiveStatus = "N";
+                input.Address1 = "88/456 thapra thonburi";
+                input.Address2 = "";
+                input.Address3 = "";
+                input.Mobile1 = "0900088888";
+                input.Mobile2 = "0900088881";
+                input.PostCode = "10600";
+                input.RegisteredDate = "2017-01-01 00:00";
+                input.Remark = "New User";
+                input.SavingAccountNo = "1000000000";
+                input.CreatedBy = "JP_POB";
+                input.BankBranch = "สีลม";
+                input.BankName = "BBL : ธนาคารกรุงเทพ";
+                input.Birthday = "2017-01-01";
+                input.CustomerCode = "";
+                input.Email = "aewwi@gmail.com";
+                input.CustomerCode = "";
+                input.IndentityCardNo = "1309900090900";
+                var output = posEDIServiceClient.KEEDI_POST_Shop_Member(input);
+                Assert.AreEqual("200", output.ResultCode);
+            }
+        }

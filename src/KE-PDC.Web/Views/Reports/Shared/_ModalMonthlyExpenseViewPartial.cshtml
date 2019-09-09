@@ -1,0 +1,255 @@
+﻿<div id="modalViewDetail" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Update #<span data-column-id="branchID"></span>&nbsp;&nbsp;&nbsp;Month/Year #<span data-column-id="MonthYear"></span></h4>
+            </div>
+            <div class="modal-body">
+                <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                    @if(ViewData["Type"].ToString().Equals("rt"))
+                    {
+                        @* Management Fee *@
+                        <fieldset id="fieldsetMandseagementFee" class="m-b-5">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <div class="row">
+                                        <div class="col-sm-4 col-md-3">
+                                            <h4 class="panel-title">
+                                                <strong>
+                                                    Management Fee
+                                                </strong>
+                                            </h4>
+                                        </div>
+                                        <div class="col-sm-6 col-md-4">
+                                            <h4 class="panel-title text-right"><span id="ManagementFee">-</span> THB</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        @* Service Fee - IT *@
+                        <div class="panel panel-default">
+                            <div class="panel-heading" role="tab" id="headingServiceFeeIT">
+                                <div class="row">
+                                    <div class="col-sm-4 col-md-3">
+                                        <h4 class="panel-title">
+                                            <strong>
+                                                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseServiceFeeIT" aria-expanded="false" aria-controls="collapseServiceFeeSupply">Service Fee - IT</a>
+                                            </strong>
+                                        </h4>
+                                    </div>
+                                    <div class="col-sm-6 col-md-4">
+                                        <h4 class="panel-title text-right"><span id="ServiceFeeIT">-</span> THB</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="collapseServiceFeeIT" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingServiceFeeIT">
+                                <div class="panel-body p-t-5 p-b-5">
+                                    <fieldset id="fieldsetServiceFeeIT">
+                                        <table id="tableServiceFeeIT" class="table table-condensed m-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th class="text-right">Cost</th>
+                                                    <th>Remark</th>
+                                                    <th width="120px">&nbsp;</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </fieldset>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (ViewData["Type"].ToString().Equals("rtsupply"))
+                    {
+                        @* Service Fee - Supply *@
+                        <div class="panel panel-default">
+                            <div class="panel-heading" role="tab" id="headingServiceFeeSupply">
+                                <div class="row">
+                                    <div class="col-sm-4 col-md-3">
+                                        <h4 class="panel-title">
+                                            <strong>
+                                                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseServiceFeeSupply" aria-expanded="false" aria-controls="collapseServiceFeeSupply">Service Fee - Supply</a>
+                                            </strong>
+                                        </h4>
+                                    </div>
+                                    <div class="col-sm-6 col-md-4">
+                                        <h4 class="panel-title text-right"><span id="ServiceFeeSupply">-</span> THB</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="collapseServiceFeeSupply" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingServiceFeeSupply">
+                                <div class="panel-body p-t-5 p-b-5">
+                                    <fieldset id="fieldsetServiceFeeSupply">
+                                        <table id="tableServiceFeeSupply" class="table table-condensed m-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th class="text-right">Cost</th>
+                                                    <th>Remark</th>
+                                                    <th width="120px">&nbsp;</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </fieldset>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (ViewData["Type"].ToString().Equals("acc"))
+                    { 
+                        @* Service Fee - Facility *@
+                        <div class="panel panel-default">
+                            <div class="panel-heading" role="tab" id="headingServiceFeeFacility">
+                                <div class="row">
+                                    <div class="col-sm-4 col-md-3">
+                                        <h4 class="panel-title">
+                                            <strong>
+                                                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseServiceFeeFacility" aria-expanded="false" aria-controls="collapseServiceFeeFacility">Service Fee - Facility</a>
+                                            </strong>
+                                        </h4>
+                                    </div>
+                                    <div class="col-sm-6 col-md-4">
+                                        <h4 class="panel-title text-right"><span id="ServiceFeeFacility">-</span> THB</h4>
+                                    </div>
+                                    <div class="col-sm-6 col-md-4">
+                                        <h4 class="panel-title text-right">+Vat 7% = <span id="ServiceFeeFacilityVat">-</span> THB</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="collapseServiceFeeFacility" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingServiceFeeFacility">
+                                <div class="panel-body p-t-5 p-b-5">
+                                    <fieldset id="fieldsetServiceFeeFacility">
+                                        <table id="tableServiceFeeFacility" class="table table-condensed m-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th class="text-right">Cost</th>
+                                                    <th>Remark</th>
+                                                    <th width="120px">&nbsp;</th>
+                                                </tr>
+                                            </thead>
+                                            @{
+                                                List<string> facilities = new List<string>();
+                                                facilities.Add("Rent");
+                                                facilities.Add("Electricity bill");
+                                                facilities.Add("Water bill");
+                                                facilities.Add("Telephone bill");
+                                                facilities.Add("Mobile bill");
+                                                facilities.Add("Internet bill");
+                                            }
+                                            <tbody>
+                                                @foreach (var facility in facilities)
+                                                {
+                                                    var key = facility.Replace(" ", "_").ToUpper();
+                                                    <tr>
+                                                        <td>@facility</td>
+                                                        <td data-item-id="@key" data-column-id="expense" class="text-right"></td>
+                                                        <td data-item-id="@key" data-column-id="remark"></td>
+                                                        <td data-item-id="@key" data-column-id="attach"></td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </fieldset>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (ViewData["Type"].ToString().Equals("ops"))
+                    {
+                        @* Sales Package *@
+                        <div class="panel panel-default m-b-5">
+                            <div class="panel-heading" role="tab" id="headingSalesPackage">
+                                <div class="row">
+                                    <div class="col-sm-4 col-md-3">
+                                        <h4 class="panel-title">
+                                            <strong>
+                                                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseSalesPackage" aria-expanded="false" aria-controls="collapseServiceFeeFacility">Sales Package</a>
+                                            </strong>
+                                        </h4>
+                                    </div>
+                                    <div class="col-sm-6 col-md-4">
+                                        <h4 class="panel-title text-right"><span id="SalesPackage">-</span> THB</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="collapseSalesPackage" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingSalesPackage">
+                                <div class="panel-body p-t-5 p-b-5">
+                                    <fieldset id="fieldsetSalesPackage">
+                                        <table id="tableSalesPackage" class="table table-condensed m-0">
+                                            <thead>
+                                                <tr>
+                                                    <th width="15%">Item</th>
+                                                    <th class="text-right">Quantity</th>
+                                                    <th class="text-right" width="20%">Expense</th>
+                                                    <th>Remark</th>
+                                                    <th width="120px">Attach file</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var package in ViewData["PackageList"] as List<Package>)
+                                                {
+                                                    <tr>
+                                                        <td>@package.PackageDesc</td>
+                                                        <td data-item-id="@package.PackageID" data-column-id="amount" class="text-right"></td>
+                                                        <td data-item-id="@package.PackageID" data-column-id="expense" class="text-right"></td>
+                                                        <td data-item-id="@package.PackageID" data-column-id="remark"></td>
+                                                        <td data-item-id="@package.PackageID" data-column-id="attach"></td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <td><strong>Total</strong></td>
+                                                    <td class="text-right" id="SalesPackageTotalAmount"></td>
+                                                    <td class="text-right" id="SalesPackageTotalExpense"></td>
+                                                    <td>&nbsp;</td>
+                                                    <td>&nbsp;</td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </fieldset>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (ViewData["Type"].ToString().Equals("rt"))
+                    {
+                        @* Adjustment *@
+                        <fieldset id="fieldsetMandseagementFee" class="m-t-5">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <div class="row">
+                                        <div class="col-sm-4 col-md-3">
+                                            <h4 class="panel-title">
+                                                <strong>
+                                                    Adjustment
+                                                </strong>
+                                            </h4>
+                                        </div>
+                                        <div class="col-sm-6 col-md-4">
+                                            <h4 class="panel-title text-right"><span id="Adjustment">-</span> THB</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

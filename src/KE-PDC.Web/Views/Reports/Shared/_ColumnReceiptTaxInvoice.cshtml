@@ -1,0 +1,17 @@
+﻿<th data-width="auto; white-space: nowrap !important" data-column-id="erP_ID" data-header-css-class="text-center" data-css-class="text-center">@SharedLocalizer["ERP ID"]</th>
+<th data-width="auto; white-space: nowrap !important" data-column-id="branchID" data-header-css-class="text-center" data-css-class="text-center">@SharedLocalizer["Branch ID"]</th>
+<th data-width="auto; white-space: nowrap !important" data-column-id="receiptDate" data-type="datetime" data-header-css-class="text-center" data-css-class="text-center">@SharedLocalizer["Receipt Date"]</th>
+<th data-width="auto; white-space: nowrap !important" data-column-id="receiptBranchNo" data-header-css-class="text-center" data-css-class="text-center">@SharedLocalizer["Receipt Branch No"]</th>
+<th data-width="auto; white-space: nowrap !important" data-column-id="branchName" data-header-css-class="text-center" data-css-class="text-center">@SharedLocalizer["Branch Name"]</th>
+<th data-width="auto; white-space: nowrap !important" data-column-id="branchType" data-header-css-class="text-center" data-css-class="text-center">@SharedLocalizer["Branch Type"]</th>
+<th data-width="auto; white-space: nowrap !important" data-column-id="@(ViewData["Action"].Equals("taxinvoice") ? "taxInvoiceNo" : "receiptNo")" data-identifier="true" data-css-class="text-center" data-header-align="center">@SharedLocalizer["No."]</th>
+<th data-width="auto; white-space: nowrap !important" data-column-id="customerName">@SharedLocalizer["Customer name"]</th>
+<th data-width="auto; white-space: nowrap !important" data-column-id="customerTaxID" data-visible="false">@SharedLocalizer["Taxpayer ID"]</th>
+<th data-width="auto; white-space: nowrap !important" data-column-id="customerIsHQ" data-visible="false">@SharedLocalizer["Headquarters"]</th>
+<th data-width="auto; white-space: nowrap !important" data-column-id="customerBranchName" data-visible="false">@SharedLocalizer["Branch"]</th>
+<th data-width="auto; white-space: nowrap !important" data-column-id="amount" data-type="decimal" data-css-class="text-right" data-header-align="right">@SharedLocalizer["Amount"]</th>
+@if (ViewData["Action"].Equals("taxinvoice"))
+{
+    <th data-width="auto; white-space: nowrap !important" data-column-id="vat" data-type="decimal" data-css-class="text-right" data-header-align="right">@SharedLocalizer["Amount of VAT"]</th>
+    <th data-width="auto; white-space: nowrap !important" data-column-id="total" data-type="decimal" data-css-class="text-right" data-header-align="right">@SharedLocalizer["Total"]</th>
+}

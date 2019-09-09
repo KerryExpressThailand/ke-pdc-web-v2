@@ -1,0 +1,50 @@
+﻿@model ReportViewModel
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">@SharedLocalizer["Search"]</h2>
+    </div>
+    <div class="card-body card-padding">
+        <form id="form-search">
+            <div class="row hidden">
+                <div class="col-sm-3 col-md-4">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Report date from"]</label>
+                        <div class="input-group-icon">
+                            <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                            <input asp-for="DateFrom" id="SearchDateFrom" class="form-control input-mask" data-mask="00/00/0000" value="@DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3 col-md-4">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Report date to"]</label>
+                        <div class="input-group-icon">
+                            <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                            <input asp-for="DateTo" id="SearchDateTo" class="form-control input-mask" data-mask="00/00/0000" value="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-3 col-md-4">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Remittance date"]</label>
+                        <div class="input-group-icon">
+                            <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                            <input asp-for="DateRemittance" id="SearchDateRemittance" class="form-control input-mask date-picker" data-mask="00/00/0000" value="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3 col-md-4">
+                    <div class="form-group">
+                        <label class="control-label">&nbsp;</label>
+                        <div>
+                            <button type="submit" class="btn btn-primary btn-search">@SharedLocalizer["Search"]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

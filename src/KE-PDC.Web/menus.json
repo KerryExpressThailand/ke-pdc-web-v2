@@ -1,0 +1,392 @@
+[
+  {
+    "Id": "F02",
+    "Controller": "Dashboard",
+    "Action": "Index",
+    "Url": null,
+    "LinkText": "Dashboard",
+    "Icon": "ion-speedometer",
+    "Children": [ [] ]
+  },
+  {
+    "Id": "F03",
+    "Controller": "ParcelShop",
+    "Action": "Index",
+    "Url": null,
+    "LinkText": "Parcel Shop",
+    "Icon": "ion-ios-cart",
+    "Children": [
+      [
+        {
+          "Id": "F0303",
+          "Controller": "ParcelShop",
+          "Action": "ShopDaily",
+          "Url": null,
+          "LinkText": "Shop Daily",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0302",
+          "Controller": "ParcelShop",
+          "Action": "CloseShop",
+          "Url": null,
+          "LinkText": "Close Shop",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0301",
+          "Controller": "ParcelShop",
+          "Action": "CloseBSD",
+          "Url": null,
+          "LinkText": "Close BSD",
+          "Icon": "",
+          "Children": [ [] ]
+        }
+      ]
+    ]
+  },
+  {
+    "Id": "F04",
+    "Controller": "Reports",
+    "Action": "Index",
+    "Url": null,
+    "LinkText": "Reports",
+    "Icon": "ion-ios-list-outline",
+    "Children": [
+      [
+        {
+          "Id": "F0416",
+          "Controller": "Reports",
+          "Action": "ShopDailyRevenue",
+          "Url": null,
+          "LinkText": "Daily Revenue",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0405",
+          "Controller": "Reports",
+          "Action": "DailyRevenueVerify",
+          "Url": null,
+          "LinkText": "Daily Revenue Verify",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0403",
+          "Controller": "Reports",
+          "Action": "DailyRevenueConfirm",
+          "Url": null,
+          "LinkText": "Daily Revenue Confirm",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0404",
+          "Controller": "Reports",
+          "Action": "DailyRevenueConfirmFC",
+          "Url": null,
+          "LinkText": "Daily Revenue Confirm FC",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0415",
+          "Controller": "Reports",
+          "Action": "Receipt",
+          "Url": null,
+          "LinkText": "Receipt",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0420",
+          "Controller": "Reports",
+          "Action": "TaxInvoice",
+          "Url": null,
+          "LinkText": "Tax Invoice",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0401",
+          "Controller": "Reports",
+          "Action": "Commission",
+          "Url": null,
+          "LinkText": "Commission",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "6a32ccf7-f820-4db8-bf84-0b390a7ac965",
+          "Controller": "Reports",
+          "Action": "LINEPay",
+          "Url": null,
+          "LinkText": "LINE Pay",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0409",
+          "Controller": "Reports",
+          "Action": "LINETopUpRemittance",
+          "Url": null,
+          "LinkText": "LINE Top-Up Remittance",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0419",
+          "Controller": "Reports",
+          "Action": "SummaryCommissionRT",
+          "Url": null,
+          "LinkText": "Summary Commission RT",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0418",
+          "Controller": "Reports",
+          "Action": "SummaryCommissionFC",
+          "Url": null,
+          "LinkText": "Summary Commission FC",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0410",
+          "Controller": "Reports",
+          "Action": "MonthlyExpenseUpdateRT",
+          "Url": null,
+          "LinkText": "Monthly Expense Update RT",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0411",
+          "Controller": "Reports",
+          "Action": "MonthlyExpenseVerifyACC",
+          "Url": null,
+          "LinkText": "Monthly Expense Verify ACC",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0412",
+          "Controller": "Reports",
+          "Action": "MonthlyExpenseVerifyOps",
+          "Url": null,
+          "LinkText": "Monthly Expense Verify Ops",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0413",
+          "Controller": "Reports",
+          "Action": "MonthlyExpenseVerifyRT",
+          "Url": null,
+          "LinkText": "Monthly Expense Verify RT",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0414",
+          "Controller": "Reports",
+          "Action": "MonthlyExpenseVerifyRTSupply",
+          "Url": null,
+          "LinkText": "Monthly Expense Verify RT-Supply",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0407",
+          "Controller": "Reports",
+          "Action": "DHLVerifyRT",
+          "Url": null,
+          "LinkText": "DHL Verify RT",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0406",
+          "Controller": "Reports",
+          "Action": "DCTopUpVerify",
+          "Url": null,
+          "LinkText": "DC Top-Up Verify",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0402",
+          "Controller": "Reports",
+          "Action": "DailyCOD",
+          "Url": null,
+          "LinkText": "Daily COD",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0408",
+          "Controller": "Reports",
+          "Action": "DownloadTUDReport",
+          "Url": null,
+          "LinkText": "Download TUD Report",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0417",
+          "Controller": "Reports",
+          "Action": "StockOrder",
+          "Url": null,
+          "LinkText": "Stock Order",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "d695cc75-4640-40de-978a-6c726da53b16",
+          "Controller": "Reports",
+          "Action": "Insurance",
+          "Url": null,
+          "LinkText": "Insurance",
+          "Icon": "",
+          "Children": [ [] ]
+        }
+      ]
+    ]
+  },
+  {
+    "Id": "F08",
+    "Controller": "DailyRevenue",
+    "Action": "Index",
+    "Url": null,
+    "LinkText": "Daily Revenue",
+    "Icon": "ion-pricetags",
+    "Children": [
+      [
+        {
+          "Id": "F0801",
+          "Controller": "DailyRevenue",
+          "Action": "BillPayment",
+          "Url": null,
+          "LinkText": "Bill Payment",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0802",
+          "Controller": "DailyRevenue",
+          "Action": "Cards",
+          "Url": null,
+          "LinkText": "Credit Card",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0803",
+          "Controller": "DailyRevenue",
+          "Action": "QRPay",
+          "Url": null,
+          "LinkText": "QR Payment",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0804",
+          "Controller": "DailyRevenue",
+          "Action": "LinePay",
+          "Url": null,
+          "LinkText": "Rabbit LinePay",
+          "Icon": "",
+          "Children": [ [] ]
+        }
+      ]
+    ]
+  },
+  {
+    "Id": "8250cb14-eff6-4d87-8133-473db37eb994",
+    "Controller": "Commission",
+    "Action": "Index",
+    "Url": null,
+    "LinkText": "Commission",
+    "Icon": "ion-social-bitcoin",
+    "Children": [
+      [
+        {
+          "Id": "98fa380b-7805-42b6-aded-df973b04d28a",
+          "Controller": "RetailSevicePoint",
+          "Action": "Index",
+          "Url": null,
+          "LinkText": "Retail Sevice Point",
+          "Icon": "ion-ios-cart",
+          "Children": [
+            [
+              {
+                "Id": "1d8630e7-522a-4cce-af7a-a0147d9a086e",
+                "Controller": "RetailSevicePoint",
+                "Action": "MonthlyCommissionVerify",
+                "Url": null,
+                "LinkText": "Monthly Commission Verify",
+                "Icon": "",
+                "Children": [ [] ]
+              }
+            ]
+          ]
+        },
+        {
+          "Id": "e1a12ede-6135-45cd-b177-7ae10ae6e3fb",
+          "Controller": "ParcelSevicePoint",
+          "Action": "Index",
+          "Url": null,
+          "LinkText": "Parcel Sevice Point",
+          "Icon": "ion-ios-box",
+          "Children": [
+            [
+              {
+                "Id": "0ce34cd2-54e0-49e0-8914-67075b92b1f6",
+                "Controller": "ParcelSevicePoint",
+                "Action": "DailyCommissionVerify",
+                "Url": null,
+                "LinkText": "Daily Commission Verify",
+                "Icon": "",
+                "Children": [ [] ]
+              }
+            ]
+          ]
+        }
+      ]
+    ]
+  },
+  {
+    "Id": "F01",
+    "Controller": "Administrators",
+    "Action": "Index",
+    "Url": null,
+    "LinkText": "Administrator",
+    "Icon": "ion-gear-b",
+    "Children": [
+      [
+        {
+          "Id": "F0102",
+          "Controller": "Administrators",
+          "Action": "Users",
+          "Url": null,
+          "LinkText": "Users",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0101",
+          "Controller": "Administrators",
+          "Action": "Menus",
+          "Url": null,
+          "LinkText": "Menus",
+          "Icon": "",
+          "Children": [ [] ]
+        }
+      ]
+    ]
+  }
+]

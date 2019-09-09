@@ -1,0 +1,52 @@
+﻿@using Microsoft.AspNetCore.Builder
+@using Microsoft.AspNetCore.Http.Features
+@using Microsoft.AspNetCore.Localization
+@using Microsoft.AspNetCore.Mvc.Localization
+@using Microsoft.Extensions.Options
+@inject IViewLocalizer Localizer
+@inject IOptions<RequestLocalizationOptions> LocalizerOptions
+@{
+    IRequestCultureFeature requestCulture = Context.Features.Get<IRequestCultureFeature>();
+    List<SelectListItem> cultureItems = LocalizerOptions.Value.SupportedUICultures
+        .Select(c => new SelectListItem { Value = c.Name, Text = c.NativeName })
+        .ToList();
+}
+<li class="dropdown">
+    <a href="#" class="dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <i class="icon ion-earth"></i>
+        <span>@requestCulture.RequestCulture.UICulture.TwoLetterISOLanguageName.ToString().ToUpper()</span>
+        <span class="caret"></span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu1">
+        @foreach (var culture in cultureItems)
+            {
+            <li><a data-ke-action="locale-picker" data-ke-value="@culture.Value" asp>@culture.Text</a></li>
+        }
+    </ul>
+</li>
+@*
+    <ul class="nav-footer col-sm-4 text-sm-left">
+        <li class="dropup">
+            <a data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="icon ion-earth"></i>
+                <span>@requestCulture.RequestCulture.UICulture.TwoLetterISOLanguageName.ToString().ToUpper()</span>
+                <span class="caret"></span>
+            </a>
+
+            <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu2">
+                @foreach (var culture in cultureItems)
+                {
+                    <li><a data-ke-action="locale-picker" data-ke-value="@culture.Value" asp>@culture.Text</a></li>
+                }
+            </ul>
+        </li>
+    </ul>
+
+    <div title="@Localizer["Request culture provider:"] @requestCulture?.Provider?.GetType().Name">
+        <form id="selectLanguage" asp-controller="Home"
+              asp-action="SetLanguage" asp-route-returnUrl="@Context.Request.Path"
+              method="post" class="form-horizontal" role="form">
+            <select name="culture" asp-for="@requestCulture.RequestCulture.UICulture.Name" asp-items="cultureItems"></select>
+        </form>
+    </div>
+*@

@@ -1,0 +1,451 @@
+﻿@{
+    ViewData["Controller"] = ViewContext.RouteData.Values["controller"].ToString().ToLower();
+    ViewData["Action"] = ViewContext.RouteData.Values["action"].ToString().ToLower();
+    ViewData["Title"] = "Monthly Expense Verify for";
+
+    switch (ViewData["Action"].ToString())
+    {
+        case "monthlyexpenseverifyacc":
+            ViewData["Type"] = "acc";
+            ViewData["Title"] += " ACC"; break;
+        case "monthlyexpenseverifyops":
+            ViewData["Type"] = "ops";
+            ViewData["Title"] += " Ops"; break;
+        case "monthlyexpenseverifyrt":
+            ViewData["Type"] = "rt";
+            ViewData["Title"] += " RT"; break;
+        case "monthlyexpenseverifyrtsupply":
+            ViewData["Type"] = "rtsupply";
+            ViewData["Title"] += " RT Supply"; break;
+    }
+}
+
+@section links {
+    <link rel="stylesheet" href="~/lib/bootstrap-select/dist/css/bootstrap-select.css" />
+    <link rel="stylesheet" href="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.css" />
+    <link rel="stylesheet" href="~/assets/stylesheets/confirm.css" />
+}
+
+@section scripts {
+    <script src="~/lib/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.js"></script>
+    <script src="~/lib/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+    <script src="~/lib/jquery-maskmoney/dist/jquery.maskMoney.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/moment/min/moment-with-locales.min.js"></script>
+    <script src="~/lib/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/lib/bootstrap-tagsinput/dist/bootstrap-tagsinput.js"></script>
+    <script src="~/lib/matchheight/dist/jquery.matchHeight-min.js"></script>
+    <script src="~/assets/javascripts/bootstrap-select-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootgrid-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootstrap-datetimepicker.js"></script>
+    <script src="~/assets/javascripts/jquery.validation-default.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var decimalToString = function (value) {
+                return parseFloat(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            var numericToString = function (value) {
+                return parseInt(value).toLocaleString();
+            }
+
+            var renderRow = function (targetIdSelected, value) {
+                var target = $("#table" + targetIdSelected),
+                    attachment = '<button type="button" class="btn btn-xs btn-default" disabled><i class="ion-android-download"></i> Download File</button>',
+                    td = $("<td></td>");
+
+                attachment = "";
+
+                if (value.attachment != null) {
+                    var path = endpoint + 'MonthlyExpense/' + value.year + "/" + value.month + "/" + value.branchID + "/" + value.categoryID + "/" + value.attachment
+                    attachment = '<a target="_blank" href="' + path + '" class="btn btn-xs btn-outline-primary"><i class="ion-android-download"></i> Download File</a>';
+                }
+
+                var PKG = {
+                    @foreach (var package in ViewData["PackageAll"] as List<Package>) {
+                        @:@package.PackageID: "@package.PackageDesc",
+                        }
+                };
+
+                if (targetIdSelected == "ServiceFeeSupply") {
+                    td.append('<td>' + PKG[value.itemDesc] + '</td>');
+                    td.append('<td class="text-right">' + decimalToString(value.itemExpense) + '</td>');
+                    td.append('<td>' + (value.remark || "") + '</td>');
+                    td.append('<td>' + attachment + '</td>');
+                    //td.find('[data-id="attachment"]').val(value.attachment);
+                }
+                else {
+                    td.append('<td>' + value.itemDesc + '</td>');
+                    td.append('<td class="text-right">' + decimalToString(value.itemExpense) + '</td>');
+                    td.append('<td>' + (value.remark || "") + '</td>');
+                    td.append('<td>' + attachment + '</td>');
+                    //td.find('[data-id="attachment"]').val(value.attachment);
+                }
+                target.prepend('<tr>' + td.html() + '</tr>');
+            }
+            @{
+                string selector = "";
+                switch (ViewData["Type"].ToString())
+                {
+                    case "acc":
+                        selector = "#collapseServiceFeeFacility"; break;
+                    case "ops":
+                        selector = "#collapseSalesPackage"; break;
+                    case "rt":
+                        selector = "#collapseServiceFeeIT"; break;
+                    case "rtsupply":
+                        selector = "#collapseServiceFeeSupply"; break;
+                }
+            }
+            $('#modalViewDetail').on("show.bs.modal", function () {
+                $("@selector").collapse('show');
+            }).on("hidden.bs.modal", function () {
+                $(this).find("table:not(#tableSalesPackage, #tableServiceFeeFacility) tbody tr:not(.init)").remove();
+                $(this).find("#ManagementFee").text("-")
+                .end().find("#ServiceFeeIT").text("-")
+                .end().find("#ServiceFeeSupply").text("-")
+                .end().find("#ServiceFeeFacility").text("-")
+                .end().find("#ServiceFeeFacilityVat").text("-")
+                .end().find("#SalesPackage").text("-")
+                .end().find('.init input:not([data-id="trash"])').val("")
+                .end().find(".collapse").collapse('hide')
+                .end().find('.panel-heading input:not([type="hidden"])').val("")
+                .end().find('#tableServiceFeeFacility input:not([type="hidden"])').val("")
+                .end().find('#tableSalesPackage input:not([type="hidden"])').val("")
+                .end().find('#tableSalesPackage tbody td[data-item-id]').text("")
+                .end().find('[name="SalesPackageExpense"]').next().text("")
+                //.end().find(".fileinput").fileinput('reset');
+            });
+
+
+            // FORM SEARCH
+            // ======================
+            var searchFirstTime = true;
+            var gridSearchResults;
+            var Verify = function (branchs) {
+                swal({
+                    title: "Are you sure?",
+                    text: "Verify this information to be recorded",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonClass: "btn-outline-primary",
+                    confirmButtonText: "Yes, confirm it!",
+                    closeOnConfirm: false
+                }, function () {
+                    $.post(endpoint + "MonthlyExpense/Verify", {
+                        BranchID: typeof branchs == "object" ? branchs.join(",") : branchs,
+                        MonthYear: $("#grid-search-results").data("export-params").MonthYear,
+                        Type: "@ViewData["Type"]",
+                    }, function (response) {
+                        if (response.success) {
+                            $.each(branchs, function (index, value) {
+                                $("#grid-search-results").find('tr[data-row-id="' + value + '"]')
+                                .addClass("bg-m-gray bg-m-lighten-3 text-m-gray")
+                                .find('[data-command="verify"]').prop("disabled", true).removeClass("btn-outline-success").addClass("btn-default")
+                                .end().find(".select-box").prop("checked", false).prop("disabled", true).removeClass("select-box").addClass("select-box-disabled")
+                                .end().find('td:last-child').html('<span class="text-success"><i class="ion-checkmark-round"></i> Verified</span>');
+                            });
+                            swal("Verified", response.messages[0], "success");
+                        }
+                        else {
+                            var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                            swal("Error", message, "error");
+                            return false;
+                        }
+                    });
+                });
+            }
+
+            $('[type=reset]').click(function (e) {
+                e.preventDefault();
+                $(this).closest('form').get(0).reset();
+                $("select").selectpicker('render');
+            });
+
+            $('[data-command="verify-all"]').click(function (e) {
+                e.preventDefault();
+                var checked = $("#grid-search-results tbody input:checked"),
+                    selected = [];
+
+                for (var i = 0; i < checked.length; i++) {
+                    selected.push(checked.eq(i).val());
+                }
+
+                if (selected.length == 0) {
+                    swal("Verify", "Please select the information to be verify!", "warning")
+                }
+                else {
+                    Verify(selected);
+                }
+            });
+
+            $('form[data-toggle="search"]').validate({
+                submitHandler: function (form) {
+                    $.pageLoader("show");
+                    var $form = $(form);
+
+                    if (searchFirstTime) {
+
+                        searchFirstTime = false;
+
+                        gridSearchResults = $("#grid-search-results").bootgrid({
+                            url: endpoint + "MonthlyExpense/Get",
+                            requestHandler: function (request) {
+                                var BranchList = $form.find('select[name="BranchList"]').val(),
+                                    request = {
+                                        BranchList: typeof BranchList == "object" ? BranchList.join(",") : BranchList,
+                                        MonthYear: $form.find('input[name="MonthYear"]').val(),
+                                        Type: "@ViewData["Type"]",
+
+                                        // Pagination
+                                        page: request.current,
+                                        perPage: request.rowCount,
+                                        order: Object.keys(request.sort)[0],
+                                        direction: request.sort[Object.keys(request.sort)[0]],
+                                        searchPhrase: request.searchPhrase,
+                                    };
+
+                                $("#modalViewDetail").find('[data-column-id="MonthYear"]').html($form.find('input[name="MonthYear"]').val());
+                                $("#grid-search-results").data("export-params", request);
+
+                                return request;
+                            },
+                            sorting: false,
+                            selection: true,
+                            multiSelect: true,
+                            templates: {
+                                header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static">@SharedLocalizer["Search Results"]</h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20"><buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-search-results">@SharedLocalizer["Export (Excel)"]</buttom><buttom class="btn btn-default hidden" data-ke-action="export" data-ke-filetype="pdf" data-ke-target="#grid-search-results"><i class="ion-document-text"></i> @SharedLocalizer["Export (PDF)"]</buttom></div></div></div></div>',
+                            },
+                            formatters: {
+                                decimal: function (column, row) {
+                                    return row[column.id] == null ? "-" : column.converter.to(row[column.id]);
+                                },
+                                facility: function (column, row) {
+                                    return row[column.id] == null ? "-" : column.converter.to(row[column.id] * 1.07);
+                                },
+                                commands: function (column, row) {
+                                    var btnVerify = ' <button class="btn btn-xs btn-default" disabled><i class="ion-checkmark-round"></i> Verified</button>';
+
+                                    if (row[column.id] == null) {
+                                        btnVerify = ' <button class="btn btn-xs btn-outline-success" data-command="verify" data-row-branch="' + row.branchID + '"><i class="ion-checkmark-round"></i> Verify</button>';
+                                    }
+
+                                    return '<button class="btn btn-xs btn-default" data-command="view" data-toggle="tooltip" data-row-branch="' + row.branchID + '"><i class="ion-search"></i> View</button>'
+                                        + btnVerify;
+                                },
+                                verify: function (column, row) {
+                                    if (row[column.id] != null) {
+                                        return '<span data-id="verify" class="text-success"><i class="ion-checkmark-round"></i> Verified</span>';
+                                    }
+                                },
+                            }
+                        })
+                        .on("loaded.rs.jquery.bootgrid", function () {
+                            $.pageLoader("hide");
+
+                            $(this)
+                            .find('[data-command="view"]').on("click", function () {
+                                $.pageLoader("show");
+
+                                var that = this,
+                                    branch = $(that).data("row-branch");
+
+                                $.get(endpoint + "MonthlyExpense/" + branch, {
+                                    MonthYear: $("#grid-search-results").data("export-params").MonthYear
+                                }, function (response) {
+                                    if (response.success) {
+                                        var result = response.result[0],
+                                            totalManagementFee = 0,
+                                            totalServiceFeeIT = 0,
+                                            totalServiceFeeSupply = 0,
+                                            totalServiceFeeFacility = 0,
+                                            totalSalesPackage = 0,
+                                            totalAmountSalesPackage = 0,
+                                            totalAdjustment = 0;
+
+                                        $.each(result.monthlyExpenseDetail, function (key, value) {
+                                            switch (value.categoryID) {
+                                                case 1:
+                                                    totalManagementFee += value.itemExpense;
+                                                    $("#ManagementFee").text(decimalToString(totalManagementFee));
+                                                    break;
+                                                case 2:
+                                                    renderRow("ServiceFeeIT", value);
+                                                    totalServiceFeeIT += value.itemExpense;
+                                                    $("#ServiceFeeIT").text(decimalToString(totalServiceFeeIT));
+                                                    break;
+                                                case 3:
+                                                    renderRow("ServiceFeeSupply", value);
+                                                    totalServiceFeeSupply += value.itemExpense;
+                                                    $("#ServiceFeeSupply").text(decimalToString(totalServiceFeeSupply));
+                                                    break;
+                                                case 4:
+                                                    var attachment = "";
+                                                    totalServiceFeeFacility += value.itemExpense;
+
+                                                    if (value.attachment != null) {
+                                                        var path = endpoint + 'MonthlyExpense/' + value.year + "/" + value.month + "/" + value.branchID + "/" + value.categoryID + "/" + value.attachment
+                                                        attachment = '<a target="_blank" href="' + path + '" class="btn btn-xs btn-outline-primary"><i class="ion-android-download"></i> Download File</a>';
+                                                    }
+
+                                                    $('[data-item-id="' + value.itemDesc + '"][data-column-id="expense"]').text(decimalToString(value.itemExpense));
+                                                    $('[data-item-id="' + value.itemDesc + '"][data-column-id="remark"]').text(value.remark);
+                                                    $('[data-item-id="' + value.itemDesc + '"][data-column-id="attach"]').html(attachment);
+
+                                                    $("#ServiceFeeFacility").text(decimalToString(totalServiceFeeFacility));
+                                                    $("#ServiceFeeFacilityVat").text(decimalToString(totalServiceFeeFacility * 1.07));
+                                                    break;
+                                                case 5:
+                                                    var attachment = "";
+                                                    totalSalesPackage += value.itemExpense;
+                                                    totalAmountSalesPackage += value.itemAmount;
+
+                                                    if (value.attachment != null) {
+                                                        var path = endpoint + 'MonthlyExpense/' + value.year + "/" + value.month + "/" + value.branchID + "/" + value.categoryID + "/" + value.attachment
+                                                        attachment = '<a target="_blank" href="' + path + '" class="btn btn-xs btn-outline-primary"><i class="ion-android-download"></i> Download File</a>';
+                                                    }
+
+                                                    $('[data-item-id="' + value.itemDesc + '"][data-column-id="amount"]').text(numericToString(value.itemAmount));
+                                                    $('[data-item-id="' + value.itemDesc + '"][data-column-id="expense"]').text(decimalToString(value.itemExpense));
+                                                    $('[data-item-id="' + value.itemDesc + '"][data-column-id="remark"]').text(value.remark);
+                                                    $('[data-item-id="' + value.itemDesc + '"][data-column-id="attach"]').html(attachment);
+
+                                                    $("#SalesPackage, #SalesPackageTotalExpense").text(decimalToString(totalSalesPackage));
+                                                    $("#SalesPackageTotalAmount").text(decimalToString(totalAmountSalesPackage));
+                                                    break;
+                                                case 6:
+                                                    totalAdjustment += value.itemExpense;
+                                                    $("#Adjustment").text(decimalToString(totalAdjustment));
+                                                    break;
+                                            }
+                                        });
+
+                                        $('#modalViewDetail')
+                                        .find('span[data-column-id="branchID"]').html(branch)
+                                        .end().css("overflow-y", "scroll").modal("show");
+
+                                        $.pageLoader("hide");
+                                    }
+                                    else {
+                                        var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                                        swal("Error", message, "error");
+                                        return false;
+                                    }
+                                });
+                            })
+                            .end().find('[data-command="verify"]').on("click", function () {
+                                Verify([$(this).data("row-branch")]);
+                            })
+                            .end().find('[data-id="verify"]').parents("tr").addClass("bg-m-gray bg-m-lighten-3 text-m-gray").find(".select-box").prop("disabled", true).removeClass("select-box").addClass("select-box-disabled");
+
+                        })
+                        .on("selected.rs.jquery.bootgrid", function (e) {
+                            $(this).find(".select-box-disabled").parents("tr.active").removeClass("active")
+                        });
+
+                        $("#card-search-results, #card-search-status").delay(500).fadeIn(300);
+                    }
+                    else {
+                        gridSearchResults.bootgrid("reload");
+                    }
+                }
+            });
+
+            // EXPORT
+            // ======================
+            $("body").on("click", '[data-ke-action="export"]', function (e) {
+                var $this = $(this),
+                    $target = $($this.data("ke-target")),
+                    params = $target.data("export-params"),
+                    filetype = $this.data("ke-filetype"),
+                    type = $this.data("ke-type");
+
+                if (typeof params === "undefined") {
+                    params = "";
+                }
+                else {
+                    var str = [];
+
+                    for (var p in params) {
+                        if (params.hasOwnProperty(p)) {
+                            str.push(encodeURIComponent(p) + "=" + encodeURIComponent(params[p]));
+                        }
+                    }
+                    params = "&" + str.join("&");
+                }
+
+                var redirectWindow = window.open(endpoint + "MonthlyExpense?FileType=" + filetype + params, '_blank');
+                redirectWindow.location;
+            });
+        });
+    </script>
+}
+
+<div class="block-header">
+    <h2 class="block-title">@ViewData["Title"]</h2>
+</div>
+
+@await Html.PartialAsync("Shared/_FormSearchBranchMonthlyPartial")
+
+<div id="card-search-results" class="card" style="display:none;">
+    <div class="card-body table-responsive">
+        <div>
+            <table id="grid-search-results" class="table table-card table-bordered table-condensed table-hover unordered">
+                <thead>
+                    <tr>
+                        <th data-column-id="branchID" data-identifier="true" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["Branch"]</th>
+
+                        @if (ViewData["Type"].Equals("rt"))
+                        {
+                            <th data-column-id="managementFee" data-type="decimal" data-formatter="decimal" data-header-css-class="bg-m-orange bg-m-lighten-5 text-right" data-css-class="text-right">@Localizer["Management Fee"]</th>
+                            <th data-column-id="serviceFeeIT" data-type="decimal" data-formatter="decimal" data-header-css-class="bg-m-orange bg-m-lighten-5 text-right" data-css-class="text-right">@Localizer["Service Fee - IT"]</th>
+                            <th data-column-id="adjustment" data-type="decimal" data-formatter="decimal" data-header-css-class="bg-m-orange bg-m-lighten-5 text-right" data-css-class="text-right">@Localizer["Adjustment"]</th>
+                        }
+
+                        @if (ViewData["Type"].Equals("acc"))
+                        {
+                            <th data-column-id="facility" data-type="decimal" data-formatter="facility" data-header-css-class="bg-m-orange bg-m-lighten-5 text-right" data-css-class="text-right">@Localizer["Facility"]</th>
+                        }
+
+                        @if (ViewData["Type"].Equals("rtsupply"))
+                        {
+                            <th data-column-id="serviceFeeSupply" data-type="decimal" data-formatter="decimal" data-header-css-class="bg-m-orange bg-m-lighten-5 text-right" data-css-class="text-right">@Localizer["Service Fee - Supply"]</th>
+                        }
+
+                        @if (ViewData["Type"].Equals("ops"))
+                        {
+                            <th data-column-id="salesPackage" data-type="decimal" data-formatter="decimal" data-header-css-class="bg-m-orange bg-m-lighten-5 text-right" data-css-class="text-right">@Localizer["Sales Package"]</th>
+                        }
+
+                        @{
+                            var commandId = "commands";
+                            switch (ViewData["Type"].ToString())
+                            {
+                                case "acc":
+                                    commandId = "feeFacilityVerifyDate";
+                                    break;
+                                case "ops":
+                                    commandId = "salesPackageVerifyDate";
+                                    break;
+                                case "rt":
+                                    commandId = "feeManagementVerifyDate";
+                                    break;
+                                case "rtsupply":
+                                    commandId = "feeSupplyVerifyDate";
+                                    break;
+                            }
+                        }
+                        
+                        <th data-column-id="@commandId" data-formatter="commands" data-header-css-class="bg-m-orange bg-m-lighten-5 text-center" data-css-class="text-center">@Localizer["Commands"]</th>
+                        <th data-column-id="@commandId" data-formatter="verify" data-header-css-class="bg-m-orange bg-m-lighten-5 text-center" data-css-class="text-center">@Localizer[$"Verify by {ViewData["Type"].ToString().ToUpper()}"]</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        <div class="text-right m-r-15 m-b-15">
+            <button class="btn btn-primary" data-command="verify-all">Verify Selection</button>
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("Shared/_ModalMonthlyExpenseViewPartial")

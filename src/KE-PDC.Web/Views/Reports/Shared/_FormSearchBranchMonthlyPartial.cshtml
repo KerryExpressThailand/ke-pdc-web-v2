@@ -1,0 +1,47 @@
+﻿@model BranchMonthlyViewModel
+
+@{
+    var branchList = ViewData["BranchList"] as List<BranchList>;
+    var BranchList = branchList
+        .Select(b => new SelectListItem { Text = b.bName, Value = b.bid, Selected = (branchList.Count.Equals(1)) });
+}
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">@SharedLocalizer["Search"]</h2>
+    </div>
+    <div class="card-body card-padding">
+        <form data-toggle="search">
+            <div class="row">
+                <div class="col-sm-4 col-md-3">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Branch"]</label>
+                        @if (branchList.Count() == 1)
+                        {
+                            <select asp-for="BranchList" asp-items="BranchList" class="selectpicker" data-width="100%" data-live-search="true" data-actions-box="true" title="@SharedLocalizer["Select branch"]" required></select>
+                        }
+                        else
+                        {
+                            <select asp-for="BranchList" asp-items="BranchList" class="selectpicker" data-width="100%" data-live-search="true" data-actions-box="true" title="@SharedLocalizer["Select branch"]" multiple required></select>
+                        }
+                    </div>
+                </div>
+                <div class="col-sm-4 col-md-3">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Month/Year"]</label>
+                        <input asp-for="MonthYear" id="SearchMonthYear" class="form-control input-mask" data-mask="00/0000" value="@DateTime.Now.AddMonths(-1).ToString("MM/yyyy", new CultureInfo("en-US"))" required>
+                    </div>
+                </div>
+                <div class="col-sm-4 col-md-3">
+                    <div class="form-group">
+                        <label class="control-label hidden-xs hidden-sm">&nbsp;</label>
+                        <div>
+                            <button type="reset" class="btn btn-default" data-toggle="tagsinput-clear" data-target="#form-search .tagsinput">@SharedLocalizer["Clear"]</button>
+                            <button type="submit" class="btn btn-primary btn-search">@SharedLocalizer["Search"]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

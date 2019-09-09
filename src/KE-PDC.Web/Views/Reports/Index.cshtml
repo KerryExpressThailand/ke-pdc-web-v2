@@ -1,0 +1,584 @@
+﻿@{
+    ViewData["Controller"] = ViewContext.RouteData.Values["controller"].ToString().ToLower();
+    ViewData["Action"] = ViewContext.RouteData.Values["action"].ToString().ToLower();
+    ViewData["Title"] = "Report";
+
+    switch (ViewData["Action"].ToString())
+    {
+        case "dailyrevenueverify":
+            ViewData["Action"] = "verify";
+            ViewData["Title"] = "Daily Revenue Verify Report"; break;
+        case "dailyrevenueconfirm":
+            ViewData["Action"] = "confirm";
+            ViewData["Title"] = "Daily Revenue Confirm Report"; break;
+        case "shopdailyrevenue":
+             ViewData["Action"] = "shopdailyrevenue";
+            ViewData["Title"] = "Shop Daily Revenue Report"; break;
+        case "receipt":
+            ViewData["Action"] = "receipt";
+            ViewData["Title"] = "Receipt Report"; break;
+        case "taxinvoice":
+            ViewData["Action"] = "taxinvoice";
+            ViewData["Title"] = "Tax Invoice Report"; break;
+        case "commission":
+            ViewData["Action"] = "commission";
+            ViewData["Title"] = "Commission Report"; break;
+        case "linepay":
+            ViewData["Action"] = "linepay";
+            ViewData["Title"] = "LINEPay Report"; break;
+        case "linetopupremittance":
+            ViewData["Action"] = "linetopupremittance";
+            ViewData["Title"] = "LINE TopUp Remittance Report"; break;
+    }
+}
+
+@section links {
+    <link rel="stylesheet" href="~/lib/bootstrap-select/dist/css/bootstrap-select.css" />
+    <link rel="stylesheet" href="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.css" />
+    <link rel="stylesheet" href="~/assets/stylesheets/confirm.css" />
+    <style>
+        .divider-y:after {
+            content: "";
+            width: 1px;
+            background-color: #eeeeee;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+}
+
+@section scripts {
+    <script src="~/lib/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.js"></script>
+    <script src="~/lib/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+    <script src="~/lib/jquery-maskmoney/dist/jquery.maskMoney.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/moment/min/moment-with-locales.min.js"></script>
+    <script src="~/lib/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/lib/bootstrap-tagsinput/dist/bootstrap-tagsinput.js"></script>
+    <script src="~/lib/matchheight/dist/jquery.matchHeight-min.js"></script>
+    <script src="~/assets/javascripts/bootstrap-select-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootgrid-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootstrap-datetimepicker.js"></script>
+    <script src="~/assets/javascripts/jquery.validation-default.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            // FORM SEARCH
+            // ======================
+            var searchFirstTime = true;
+            var gridSearchResults;
+
+            $('[type=reset]').click(function (e) {
+                e.preventDefault();
+                $(this).closest('form').get(0).reset();
+                $("select").selectpicker('render');
+            });
+
+            $('#modal-confirm').on("show.bs.modal", function () {
+                //$(this).find('input[name="CommRemark"], input[name="OtherRemark"], input[name="ReturnRemark"], input[name="SuspensseRemark"], input[name="WithHoldingTaxRemark"], input[name="PromotionRemark"], input[name="BankChargeRemark"]').val("");
+            });
+
+            $('[data-command="confirm-select"]').on("click", function(e) {
+                e.preventDefault();
+                var checked = $("#grid-search-results tbody input:checked"),
+                    idList = [];
+
+                for (var i = 0; i < checked.length; i++) {
+                    idList.push(checked.eq(i).val());
+                }
+
+                if (idList.length == 0) {
+                    swal("Confirm Select", "Please select the information to be updated!", "warning")
+                }
+                else {
+                    swal({
+                        title: "Are you sure?",
+                        text: "Confirm this select to be recorded",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonClass: "btn-outline-primary",
+                        confirmButtonText: "Yes, Confirm it!",
+                        closeOnConfirm: false
+                    }, function () {
+                        $.post(endpoint + "ConfirmDailyRevenue", {
+                            IDs: idList.join(),
+                        }, function (response) {
+                            if (response.success) {
+                                $.each(idList, function (index, value) {
+                                    $('#grid-search-results tr[data-row-id="' + value + '"]')
+                                    .addClass("bg-m-gray bg-m-lighten-3 text-m-gray")
+                                    .find(".select-box").prop("disabled", true).prop("checked", false).removeClass("select-box").addClass("select-box-disabled")
+                                    .end().find('[data-command="edit"]').prop("disabled", true).removeClass("btn-outline-warning").addClass("btn-default")
+                                    .end().find('td [data-id="comfirm-status"]').html('<div data-id="comfirm-status" class="text-success"><div class="text-success"><i class="ion-checkmark-round"></i></div><small class="text-success">Comfirmed</small></div>');
+                                });
+
+                                swal("Confirmed", response.messages[0], "success");
+                            }
+                            else {
+                                var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                                swal("Error", message, "error");
+                                return false;
+                            }
+                        });
+                    });
+                }
+            });
+
+            $("#grid-search-results")
+            .on("initialized.rs.jquery.bootgrid", function () {
+                @{
+                    string selector = "";// "[data-column-id=\"branchID\"], [data-column-id=\"b_id\"]";
+                    string tableParent = "";// "<tr class=\"bg-m-amber bg-m-lighten-5\"><th class=\"text-center\" style=\"vertical-align: middle;\" rowspan=\"2\">Branch</th><th class=\"text-center\" colspan=\"6\">Type</th><th class=\"text-center\" colspan=\"5\">A/C</th><th class=\"text-center\" colspan=\"3\">BSD</th><th style=\"vertical-align: middle;\" rowspan=\"2\">Confirm</th></tr>";
+
+                    @if (ViewData["Action"].Equals("shopdailyrevenue"))
+                    {
+                        tableParent = "<tr><th class=\"text-center bg-m-gray bg-m-lighten-2\" style=\"vertical-align: middle;\" rowspan=\"2\">Branch</th><th data-column-id=\"dateFromTo\" class=\"text-center bg-m-blue bg-m-lighten-4\" colspan=\"6\" style=\"border-right: 1px solid #BBDEFB;\">' + dateFrom + ' to ' + dateTo + '</th><th data-column-id=\"dateTo\" class=\"text-center bg-m-amber bg-m-lighten-5\" colspan=\"6\">As of ' + dateTo +'</th></tr>";
+                        selector = "[data-column-id=\"branchID\"], [data-column-id=\"b_id\"]";
+                    }
+                }
+                var dateFrom = $("#form-search").find('input[name="DateFrom"]').val(),
+                    dateTo = $("#form-search").find('input[name="DateTo"]').val();
+
+                $(this)
+                .find('@Html.Raw(@selector)').remove()
+                .end().find("thead").prepend('@Html.Raw(tableParent)');
+            });
+
+            $("#form-search").validate({
+                submitHandler: function (form) {
+                    $.pageLoader("show");
+                    var $form = $(form);
+
+                    if (searchFirstTime) {
+
+                        searchFirstTime = false;
+
+                        gridSearchResults = $("#grid-search-results").bootgrid({
+                            ajaxSettings: {
+                                method: "POST",
+                            },
+                            url: endpoint + "Reports",
+                            requestHandler: function (request) {
+                                var BranchList = $form.find('select[name="BranchList"]').val(),
+                                    request = {
+                                        Type: "@ViewData["Action"]",                                        
+                                        BranchType: $form.find('select[name="BranchType"]').val(),
+                                        BranchList: typeof BranchList == "object" ? BranchList.join(",") : BranchList,
+                                        DateFrom: $form.find('input[name="DateFrom"]').val(),
+                                        DateTo: $form.find('input[name="DateTo"]').val() || "@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))",
+                                        MonthYear: $form.find('input[name="MonthYear"]').val() || null,
+                                        OrderBy: $form.find('select[name="OrderBy"]').val() || 1,
+                                        TypeLine: $form.find('input[name="TypeLine"]').val() || null,
+                                        DateRemittance: $form.find('input[name="DateRemittance"]').val() || null,
+                                        
+                                        // Pagination
+                                        page: request.current,
+                                        perPage: request.rowCount,
+                                        order: Object.keys(request.sort)[0],
+                                        direction: request.sort[Object.keys(request.sort)[0]],
+                                        searchPhrase: request.searchPhrase,
+
+                                    };
+
+                                $("#grid-search-results").data("export-params", request);
+
+                                return request;
+                            },
+                            sorting: false,
+                            selection: @ViewData["Action"].Equals("confirm").ToString().ToLower(),
+                            multiSelect: @ViewData["Action"].Equals("confirm").ToString().ToLower(),
+                            templates: {
+                                header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static">@SharedLocalizer["Search Results"]</h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20">@if (ViewData["Action"].Equals("") || true) { <buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-search-results"><i class="ion-ios-list-outline"></i> @SharedLocalizer["Export (Excel)"]</buttom>}@if (ViewData["Action"].Equals("linetopupremittance")) { <buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="pdf" data-ke-target="#grid-search-results"><i class="ion-document-text"></i> @SharedLocalizer["Export (PDF)"]</buttom>}</div></div></div></div>',
+                            },
+                            formatters: {
+                                verifydate: function (column, row) {
+                                    return "<span title=\"" + row.capturedBy + "\" data-toggle=\"tooltip\">" + moment(row.verifyDate).format("DD/MM/YYYY") + "</span>";
+                                },
+                                verify: function (column, row) {
+                                    return '<button class="btn btn-block btn-sm btn-primary" data-command="verify" data-row-id="' + row.id + '" data-row-branch="' + row.b_id + '" data-row-report-date="' + row.reportDate + '"><i class="ion-checkmark-round"></i></button>';
+                                },
+                                captured: function (column, row) {
+                                    return row[column.id] ? "Yes" : "No";
+                                },
+                                commands: function (column, row) {
+                                    var btnEditClass = row.approved ? "btn-default" : "btn-outline-warning";
+                                    return '<button class="btn btn-xs btn-default" data-command="view" data-row-id="' + row.id + '" data-row-branch="' + row.b_id + '" data-row-report-date="' + row.reportDate + '"><i class="ion-search"></i> View</button>'
+                                        + ' <button class="btn btn-xs ' + btnEditClass + '" data-command="edit" data-row-id="' + row.id + '" data-row-branch="' + row.b_id + '" data-row-report-date="' + row.reportDate + '"' + (row.approved ? "disabled" : "") + '><i class="ion-edit"></i> Edit</button>';
+                                },
+                                confirmstatus: function (column, row) {
+                                    return row.approved ? '<div data-id="comfirm-status" data-toggle="tooltip" title="by ' + row.approvedBy + ' at ' + moment(row.approvedDate).format("DD/MM/YYYY HH:mm:ss") + '" class="text-success"><div class="text-success"><i class="ion-checkmark-round"></i></div><small class="text-success">Comfirmed</small></div>' : '<div data-id="comfirm-status" class="text-success"></div>';
+                                },
+                                tuc: function (column, row) {
+                                    if ((column.id == 'tuc-dcsp' && row.branch_type == 'DCSP-SHOP') || (column.id != 'tuc-dcsp' && row.branch_type != 'DCSP-SHOP')) {
+                                        return row.tuc;
+                                    }
+
+                                    return '-';
+                                }
+                            }
+                        })
+                        .on("loaded.rs.jquery.bootgrid", function () {
+                            $.pageLoader("hide");
+
+                            var dateFrom = $("#form-search").find('input[name="DateFrom"]').val(),
+                                dateTo = $("#form-search").find('input[name="DateTo"]').val();
+
+                            gridSearchResults.find('[data-command="edit"][disabled]').parents("tr")
+                            .addClass("bg-m-gray bg-m-lighten-3 text-m-gray").parents("tbody")
+                            .find(".select-box").prop("disabled", true).removeClass("select-box").addClass("select-box-disabled");
+
+                            gridSearchResults
+                            .find('[data-column-id="dateFromTo"]').text(dateFrom + " to " + dateTo)
+                            .end().find('[data-column-id="dateTo"]').text("As of " + dateTo)
+                            .end().find('[data-column-id="mtdYPB"]').css("border-right-color", function () {
+                                return $('[data-column-id="mtdYPB"]').css("background-color");
+                            })
+                            .end().find("tr td:nth-child(7)").css("border-right-color", function () {
+                                return $('[data-column-id="mtdYPB"]').css("background-color");
+                            })
+                            .end().find('[data-command="view"], [data-command="verify"], [data-command="edit"]').on("click", function () {
+                                var that = this,
+                                    id = $(this).data("row-id"),
+                                    branch = $(this).data("row-branch"),
+                                    reportDate = $(this).data("row-report-date"),
+                                    command = $(this).data("command");
+
+                                $.pageLoader("show");
+
+                                $("#form-detail").data("row-id", id);
+
+                                $.get(endpoint + "Reports/" + branch, {
+                                    ReportDate: reportDate,
+                                }, function (response) {
+                                    var result = response.result[0];
+                                    if (response.success) {
+                                        $.each(result, function (key, value) {
+                                            var $e = $("#form-detail").find('[data-column-id="' + key + '"]'),
+                                                type = $e.data("type"),
+                                                textValue = "-";
+
+                                            switch (type) {
+                                                case "numeric":
+                                                    textValue = value.toLocaleString();
+                                                    break;
+                                                case "decimal":
+                                                    textValue = value.toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                    break;
+                                                case "date":
+                                                    textValue = value == null ? "-" : moment(value).format("DD/MM/YYYY");
+                                                    break;
+                                            }
+
+                                            $e.text(textValue);
+                                        });
+
+                                        var totalService = (result.freight + result.cod + result.insur + result.package + result.salePackage + result.lineTopUp) - result.discount,
+                                            totalPayment = result.cash + result.rabbit + result.credit + result.linePay,
+                                            totalSurcharge = (result.transportation + result.vasSurcharge + result.vat) - result.discount,
+                                            bsdTotalAccout = (result.city + result.cityn + result.citys + result.grab) - result.discountBSD,
+                                            bsdTotalPayment = result.bsdCash + result.bsdLinePay,
+                                            bsdTotalPaymentCash = result.bsdCash + result.bsdLineTopUp;
+
+                                        $("#form-detail")
+                                        .find('[data-column-id="totalTransfer"]').text(result.totalTransfer.toLocaleString(undefined, { minimumFractionDigits: 2 }))
+                                        .end().find('[data-column-id="totalService"]').text(totalService.toLocaleString(undefined, { minimumFractionDigits: 2 }))
+                                        .end().find('[data-column-id="totalPayment"]').text(totalPayment.toLocaleString(undefined, { minimumFractionDigits: 2 }))
+                                        .end().find('[data-column-id="totalSurcharge"]').text(totalSurcharge.toLocaleString(undefined, { minimumFractionDigits: 2 }))
+                                        .end().find('[data-column-id="bsdTotalAccout"]').text(bsdTotalAccout.toLocaleString(undefined, { minimumFractionDigits: 2 }))
+                                        .end().find('[data-column-id="bsdTotalPayment"]').text(bsdTotalPayment.toLocaleString(undefined, { minimumFractionDigits: 2 }))
+                                        .end().find('[data-column-id="bsdTotalPaymentCash"]').text(bsdTotalPaymentCash.toLocaleString(undefined, { minimumFractionDigits: 2 }));
+
+                                        $('#modal-confirm')
+                                        .find(".maskmoney").val("")
+                                        .end().find('[data-column-id="b_id"]').text(branch)
+                                        .end().find('[data-column-id="reportDate"]').text(moment(reportDate).format("DD/MM/YYYY"))
+                                        .end().find(".maskmoney").val("0.00")
+                                        .end().find('input[name="Branch"]').val(branch)
+                                        .end().find('input[name="ReportDate"]').val(reportDate)
+
+                                        .end().find('input[name="Comm"]').val(result.bonusCommission)
+                                        .end().find('input[name="Other"]').val(result.adjOther)
+                                        .end().find('input[name="Return"]').val(result.returnCharge)
+                                        .end().find('input[name="Suspensse"]').val(result.suspense)
+                                        .end().find('input[name="WithHoldingTax"]').val(result.withHoldingTax)
+                                        .end().find('input[name="Promotion"]').val(result.promotion)
+                                        .end().find('input[name="bankCharge"]').val(result.bankCharge)
+
+                                        .end().find('input[name="CommRemark"]').val(result.bonusCommissionRemark)
+                                        .end().find('input[name="OtherRemark"]').val(result.adjOtherRemark)
+                                        .end().find('input[name="ReturnRemark"]').val(result.returnChargeRemark)
+                                        .end().find('input[name="SuspensseRemark"]').val(result.suspenseRemark)
+                                        .end().find('input[name="WithHoldingTaxRemark"]').val(result.withHoldingTaxRemark)
+                                        .end().find('input[name="PromotionRemark"]').val(result.promotionRemark)
+                                        .end().find('input[name="BankChargeRemark"]').val(result.bankChargeRemark)
+
+                                        .end().find('input').prop("disabled", (command == "view"))
+                                        .end().find('button[type="submit"]').css("display", function () {
+                                            return command == "view" ? "none" : "inline-block";
+                                        })
+                                        .end().modal("show");
+
+                                        $.pageLoader("hide");
+                                    }
+                                    else {
+                                        var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                                        swal("Error", message, "error");
+                                        return false;
+                                    }
+                                });
+                            }).end()
+                            .find('[data-toggle="tooltip"]').tooltip({
+                                container: "body",
+                            }).end();
+                        });
+
+                        $("#card-search-results, #card-search-status").delay(500).fadeIn(300);
+                    }
+                    else {
+                        gridSearchResults.bootgrid("reload");
+                    }
+                }
+            });
+
+            // SUBMIT DAILY REVENUE DETAIL
+            // ======================
+            $("#form-detail").validate({
+                submitHandler: function (form) {
+                    var $form = $(form),
+                        type = $form.data("type"),
+                        text = type == "verify" ? "Verify" : "Confirm",
+                        textAfter = type == "verify" ? "Verified" : "Confirmed";
+
+                    swal({
+                        title: "Are you sure?",
+                        text: text + " this information to be recorded",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonClass: "btn-outline-primary",
+                        confirmButtonText: "Yes, " + text + " it!",
+                        closeOnConfirm: false
+                    }, function () {
+                        var $form = $(form),
+                            id = $form.data("row-id");
+
+                        var getVal = function (selector) {
+                            return parseFloat($form.find(selector).val().replace(/[^\d\.\-]/g, ""))
+                        }
+
+                        $.post(endpoint + "DailyRevenueVerify", {
+                            Type: type,
+                            Branch: $form.find('input[name="Branch"]').val(),
+                            ReportDate: $form.find('input[name="ReportDate"]').val(),
+                            VerifyDate: $form.find('input[name="VerifyDate"]').val(),
+                            RemittanceDate: $form.find('input[name="RemittanceDate"]').val(),
+
+                            // Money
+                            Comm: getVal('input[name="Comm"]'),
+                            Other: getVal('input[name="Other"]'),
+                            Return: getVal('input[name="Return"]'),
+                            Suspensse: getVal('input[name="Suspensse"]'),
+                            WithHoldingTax: getVal('input[name="WithHoldingTax"]'),
+                            Promotion: getVal('input[name="Promotion"]'),
+                            Promotion: getVal('input[name="Promotion"]'),
+                            BankCharge: getVal('input[name="BankCharge"]'),
+
+                            // Remark
+                            CommRemark: $form.find('input[name="CommRemark"]').val(),
+                            OtherRemark: $form.find('input[name="OtherRemark"]').val(),
+                            ReturnRemark: $form.find('input[name="ReturnRemark"]').val(),
+                            SuspensseRemark: $form.find('input[name="SuspensseRemark"]').val(),
+                            WithHoldingTaxRemark: $form.find('input[name="WithHoldingTaxRemark"]').val(),
+                            PromotionRemark: $form.find('input[name="PromotionRemark"]').val(),
+                            BankChargeRemark: $form.find('input[name="BankChargeRemark"]').val(),
+                        }, function (response) {
+                            if (response.success) {
+                                if (type == "verify") {
+                                    $('#grid-search-results tr[data-row-id="' + id + '"]').remove();
+                                }
+                                $('#modal-confirm').modal("hide");
+                                swal(textAfter, response.messages[0], "success");
+                            }
+                            else {
+                                var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                                swal("Error", message, "error");
+                                return false;
+                            }
+                        });
+                    });
+                }
+            });
+
+            // EXPORT
+            // ======================
+            $("body").on("click", '[data-ke-action="export"]', function (e) {
+                var $this = $(this),
+                    $target = $($this.data("ke-target")),
+                    params = $target.data("export-params"),
+                    filetype = $this.data("ke-filetype"),
+                    type = $this.data("ke-type");
+
+                params.filetype = filetype;
+                params.type = type;
+
+                var form = $('<form/>');
+                form.attr('action', endpoint + 'Reports').attr('method', 'POST').attr('target', '_blank');
+
+                $.each(params, function (k, v) {
+                    if (typeof v !== 'undefined') {
+                        $(form).append($('<input name="' + k + '" value="' + v + '" type="hidden">'));
+                    }
+                });
+
+                $('body').append(form);
+
+                form.submit();
+                form.remove();
+            });
+
+            $('#LinePayTabs a').click(function (e) {
+                e.preventDefault();
+                var type = $(this).data("type"),
+                    grid = $("#grid-search-results");
+
+                $('#form-search input[name="TypeLine"]').val(type);
+
+                grid.bootgrid("destroy");
+
+                searchFirstTime = true;
+
+                $("#form-search").trigger("submit");
+            });
+        });
+
+    </script>
+}
+
+<div class="block-header">
+    <h2 class="block-title">@ViewData["Title"]</h2>
+</div>
+
+@if (ViewData["Action"].Equals("linetopupremittance"))
+{
+    @await Html.PartialAsync("Shared/_FormSearchLINETopUpRemittancePartial")
+}
+else
+{
+    @await Html.PartialAsync("Shared/_FormSearchPartial")
+}
+@if (ViewData["Action"].Equals("linepay"))
+{
+    <div id="card-search-status" style="display:none;">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="m-b-5 text-muted text-uppercase">Payment</div>
+                <div class="card">
+                    <div class="card-body bg-m-light-green bg-m-darken-2 text-m-white">
+                        <div class="p-l-15 p-r-15">
+                            <div class="row">
+                                <div class="col-xs-6 m-t-15 m-b-15">
+                                    <h3 class="m-0 text-center">-</h3>
+                                    <div class="text-right"><small>All</small></div>
+                                </div>
+                                <div class="col-xs-6 m-t-15 m-b-15 divider-y">
+                                    <h3 class="m-0 text-center">-</h3>
+                                    <div class="text-right"><small>Cancel</small></div>
+                                </div>
+                            </div>
+                            <hr class="m-0" />
+                            <div class="row">
+                                <div class="col-xs-12 p-15">
+                                    <h3 class="m-0 text-center">-</h3>
+                                    <div class="text-right"><small>Total</small></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="m-b-5 text-muted text-uppercase">Top-Up</div>
+                <div class="card">
+                    <div class="card-body bg-m-amber bg-m-darken-4 text-m-white">
+                        <div class="p-l-15 p-r-15">
+                            <div class="row">
+                                <div class="col-xs-6 m-t-15 m-b-15">
+                                    <h3 class="m-0 text-center">-</h3>
+                                    <div class="text-right"><small>All</small></div>
+                                </div>
+                                <div class="col-xs-6 m-t-15 m-b-15 divider-y">
+                                    <h3 class="m-0 text-center">-</h3>
+                                    <div class="text-right"><small>Cancel</small></div>
+                                </div>
+                            </div>
+                            <hr class="m-0" />
+                            <div class="row">
+                                <div class="col-xs-12 p-15">
+                                    <h3 class="m-0 text-center">-</h3>
+                                    <div class="text-right"><small>Total</small></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div id="card-search-results" class="card" style="display: none;">
+    <div class="card-body table-responsive">
+        @if (ViewData["Action"].Equals("linepay"))
+        {
+            <div role="tabpanel">
+                <ul id="LinePayTabs" class="nav nav-tabs" role="tablist">
+                    <li class="active"><a href="#linePayPayment" aria-controls="linePayPayment" role="tab" data-toggle="tab" data-type="payment"><h4 class="m-0">Payment</h4></a></li>
+                    <li><a href="#linePayTopup" aria-controls="linePayTopup" role="tab" data-toggle="tab" data-type="topup"><h4 class="m-0">TOP-UP</h4></a></li>
+                </ul>
+            </div>
+        }
+        <div>
+            <table id="grid-search-results" class="table table-card table-bordered table-condensed table-hover unordered">
+                <thead>
+                    @{ string classTr = ViewData["Action"].Equals("shopdailyrevenue") ? "":" class=\"bg-m-amber bg-m-lighten-5\""; }
+                    <tr @Html.Raw(classTr)>
+                        @if (ViewData["Action"].Equals("shopdailyrevenue"))
+                        {
+                            @await Html.PartialAsync("Shared/_ColumnShopDailyRevenue")
+                        }
+                        else if (ViewData["Action"].Equals("receipt") || ViewData["Action"].Equals("taxinvoice"))
+                        {
+                            @await Html.PartialAsync("Shared/_ColumnReceiptTaxInvoice")
+                        }
+                        else if (ViewData["Action"].Equals("commission"))
+                        {
+                            @await Html.PartialAsync("Shared/_ColumnCommission")
+                        }
+                        else if (ViewData["Action"].Equals("linepay"))
+                        {
+                            @await Html.PartialAsync("Shared/_ColumnLINEPay")
+                        }
+                        else if (ViewData["Action"].Equals("linetopupremittance"))
+                        {
+                            @await Html.PartialAsync("Shared/_ColumnLINETopUpRemittance")
+                        }
+                        else
+                        {
+                            @await Html.PartialAsync("Shared/_ColumnDailyRevenueVerify")
+                        }
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        @if (ViewData["Action"].Equals("confirm"))
+        {
+            <div class="text-right m-r-15 m-b-15">
+                <button class="btn btn-primary" data-command="confirm-select">Confirm Select</button>
+            </div>
+        }
+    </div>
+</div>
+
+@await Html.PartialAsync("Modal/_DailyRevenueDetailPartial")

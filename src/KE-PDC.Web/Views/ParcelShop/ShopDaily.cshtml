@@ -1,0 +1,411 @@
+﻿@{
+    ViewData["Title"] = "Parcel Shop - Shop Daily";
+    var branchList = ViewData["BranchList"] as List<BranchList>;
+    var BranchList = branchList
+        .Select(b => new SelectListItem { Text = b.bName, Value = b.bid, Selected = (branchList.Count.Equals(1)) });
+}
+
+@section links {
+    <link rel="stylesheet" href="~/lib/bootstrap-select/dist/css/bootstrap-select.css" />
+    <link rel="stylesheet" href="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.css" />
+    <link rel="stylesheet" href="~/assets/stylesheets/confirm.css" />
+    <style>
+        .card-icon {
+            position: relative;
+        }
+        
+        .card-icon .icon {
+            position: absolute;
+            opacity: .25;
+            font-size: 6em;
+            top: 0;
+            right: 10px;
+            line-height: 90px;
+            z-index: 1;
+        }
+
+        .card-icon small {
+            opacity: .8;
+        }
+    </style>
+}
+
+@section scripts {
+    <script src="~/lib/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.js"></script>
+    <script src="~/lib/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+    <script src="~/lib/jquery-maskmoney/dist/jquery.maskMoney.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/moment/min/moment-with-locales.min.js"></script>
+    <script src="~/lib/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/lib/bootstrap-tagsinput/dist/bootstrap-tagsinput.js"></script>
+    <script src="~/lib/matchheight/dist/jquery.matchHeight-min.js"></script>
+    <script src="~/lib/jasny-bootstrap/js/fileinput.js"></script>
+    <script src="~/assets/javascripts/bootstrap-select-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootgrid-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootstrap-datetimepicker.js"></script>
+    <script src="~/assets/javascripts/jquery.validation-default.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var decimalToString = function (value) {
+                if (value == null) return '-';
+                return parseFloat(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            var numericToString = function (value) {
+                if (value == null) return '-';
+                return parseInt(value).toLocaleString();
+            }
+
+            $('input[name="Date"]').data("DateTimePicker").maxDate(new Date('@DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd", new CultureInfo("en-US"))'));
+
+            $('form[data-toggle="search"]').validate({
+                submitHandler: function (form) {
+                    $.pageLoader("show");
+                    var $form = $(form),
+                        BranchList = $form.find('select[name="BranchList"]').val();
+
+                    $.getJSON(endpoint + "ParcelShopShopDaily", {
+                        BranchList: typeof BranchList == "object" ? BranchList.join(",") : BranchList,
+                        Date: $form.find('input[name="Date"]').val(),
+                    }, function (response) {
+                        $.pageLoader("hide");
+
+                        if (response.success) {
+                            var result = response.result[0],
+                                totalValueAdded = result.totalCOD + result.totalInsurance + result.totalBSD + result.totalLineTopUp + result.totalPackage;
+
+                            $("#parcelShopTotal")
+                                .find('[data-total="totalConsignment"]').text(numericToString(result.totalConsignment))
+                                .end().find('[data-total="totalBox"]').text(numericToString(result.totalBox))
+                                .end().find('[data-total="totalDHL"]').text(decimalToString(result.totalDHL))
+                                .end().find('[data-total="totalRevenue"]').text(decimalToString(result.totalRevenue))
+                                .end().find('[data-total="totalTransferPOS"]').text(decimalToString(result.totalTransferPOS))
+                                .end().find('[data-total="totalTransferBSD"]').text(decimalToString(result.totalTransferBSD))
+                                .end().find('[data-total="totalTransfer"]').text(decimalToString(result.totalTransfer))
+                                .end().find('[data-total="totalCash"]').text(decimalToString(result.totalCash))
+                                .end().find('[data-total="totalRabbit"]').text(decimalToString(result.totalRabbit))
+                                .end().find('[data-total="totalCredit"]').text(decimalToString(result.totalCredit))
+                                .end().find('[data-total="totalLinePay"]').text(decimalToString(result.totalLinePay))
+                                .end().find('[data-total="totalRevenueOnlyFreight"]').text(decimalToString(result.totalRevenueOnlyFreight))
+                                .end().find('[data-total="totalCOD"]').text(decimalToString(result.totalCOD))
+                                .end().find('[data-total="totalInsurance"]').text(decimalToString(result.totalInsurance))
+                                .end().find('[data-total="totalBSD"]').text(decimalToString(result.totalBSD))
+                                .end().find('[data-total="totalLineTopUp"]').text(decimalToString(result.totalLineTopUp))
+                                .end().find('[data-total="totalPackage"]').text(decimalToString(result.totalPackage))
+                                .end().find('[data-total="totalValueAddedService"]').text(decimalToString(result.totalValueAddedService))
+
+                                .end().find('[data-total="totalValueAdded"]').text(decimalToString(
+                                    totalValueAdded
+                                ));
+                        }
+                        else {
+                            var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                            swal("Error", message, "error");
+                            return false;
+                        }
+                    });
+                }
+            });
+
+            $('[data-toggle="exportDailyCash"]').on("click", function () {
+                var $form = $('form[data-toggle="search"]'),
+                    BranchList = $form.find('select[name="BranchList"]').val();
+
+                if ($form.valid()) {
+                    BranchList = typeof BranchList == "object" ? BranchList.join(",") : BranchList
+
+                    var redirectWindow = window.open(endpoint + "ParcelShop/CloseShopExport?FileType=pdf&Type=closeshop&BranchType=all&BranchList=" + BranchList + "&DateFrom=" + $form.find('input[name="Date"]').val(), '_blank');
+                    redirectWindow.location;
+                }
+            });
+
+            $('[data-toggle="exportExcel"]').on("click", function () {
+                var $form = $('form[data-toggle="search"]'),
+                    Type = $(this).data("type"),
+                    BranchList = $form.find('select[name="BranchList"]').val();
+
+                if ($form.valid()) {
+                    BranchList = typeof BranchList == "object" ? BranchList.join(",") : BranchList
+
+                    var redirectWindow = window.open(endpoint + "ParcelShopShopDaily/" + Type + "Export?BranchType=all&BranchList=" + BranchList + "&Date=" + $form.find('input[name="Date"]').val(), '_blank');
+                    redirectWindow.location;
+                }
+            });
+
+            @*$("#grid-search-results").bootgrid({
+                url: endpoint + "Reports",
+                requestHandler: function (request) {
+                    var BranchList = $form.find('select[name="BranchList"]').val(),
+                        request = {
+                            // Pagination
+                            page: request.current,
+                            perPage: request.rowCount,
+                            order: Object.keys(request.sort)[0],
+                            direction: request.sort[Object.keys(request.sort)[0]],
+                            searchPhrase: request.searchPhrase,
+                        };
+
+                    $("#grid-search-results").data("export-params", request);
+
+                    return request;
+                },
+                sorting: false,
+                templates: {
+                    header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static">@Localizer["Acc"]</h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20"><buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-search-results">@SharedLocalizer["Export (Excel)"]</buttom><buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="pdf" data-ke-target="#grid-search-results"><i class="ion-document-text"></i> @SharedLocalizer["Export (PDF)"]</buttom></div></div></div></div>',
+                },
+                formatters: {
+                    verifydate: function (column, row) {
+                        return;
+                    },
+                }
+            })
+            .on("loaded.rs.jquery.bootgrid", function () {
+                $.pageLoader("hide");
+
+                gridSearchResults;
+            });*@
+        });
+    </script>
+}
+
+<div class="block-header">
+    <h2 class="block-title">@ViewData["Title"]</h2>
+</div>
+
+<div class="row">
+    <form data-toggle="search" method="post" enctype="application/x-www-form-urlencoded">
+        <div class="col-sm-3 col-sm-6 col-md-3">
+            <div class="form-group">
+                <label class="control-label" for="BranchList">@SharedLocalizer["Branch"]</label>
+                @if (true || branchList.Count() == 1)
+                {
+                    <select asp-items="BranchList" name="BranchList" class="selectpicker" data-width="100%" data-live-search="true" data-actions-box="true" title="@Localizer["Select Branch"]" required></select>
+                }
+                else
+                {
+                    <select asp-items="BranchList" name="BranchList" class="selectpicker" data-width="100%" data-live-search="true" data-actions-box="true" title="@Localizer["Select Branch"]" multiple required></select>
+                }
+            </div>
+        </div>
+        <div class="col-sm-3 col-sm-6 col-md-3">
+            <div class="form-group">
+                <label class="control-label" for="SearchDate">@SharedLocalizer["Date"]</label>
+                <input name="Date" id="SearchDate" class="form-control input-mask date-picker" data-mask="00/00/0000" value="@DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy", new CultureInfo("en-US"))" required>
+            </div>
+        </div>
+        <div class="col-xs-3 col-md-2">
+            <div class="form-group">
+                <label class="control-label hidden-xs hidden-sm">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-icon-text btn-primary"><i class="ion-search"></i> Search</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-9 col-md-4 text-right">
+            <div class="d-inline-block">
+                <div class="form-group text-left">
+                    <label class="control-label hidden-xs hidden-sm">@Localizer["Export"]</label>
+                    <div>
+                        <button data-toggle="exportDailyCash" type="button" class="btn btn-icon-text btn-primary"><i class="ion-document"></i> Daily Cash</button>
+                        <button data-toggle="exportExcel" data-type="Accounting" class="btn btn-icon-text btn-primary"><i class="ion-ios-book-outline"></i> Accounting</button>
+                        <button data-toggle="exportExcel" data-type="MDE" class="btn btn-icon-text btn-primary"><i class="ion-clipboard"></i> MDE</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="parcelShopTotal">
+    <div class="row">
+        @*<div class="col-md-3">
+                <div class="card card-icon">
+                    <div class="card-body card-padding-sm bg-m-deep-orange text-m-white">
+                        <i class="icon ion-ios-cart"></i>
+                        <small class="text-uppercase">Consignment</small>
+                        <h1 class="m-0 text-center" data-total="consignment">-</h1>
+                    </div>
+                </div>
+            </div>*@
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-icon">
+                <div class="card-body card-padding-sm bg-m-teal text-m-white">
+                    <i class="icon ion-cube"></i>
+                    <small class="text-uppercase">Consignment/Box</small>
+                    <h1 class="m-0 text-center">
+                        <span data-total="totalConsignment"></span> / <span data-total="totalBox"></span>
+                    </h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-icon">
+                <div class="card-body card-padding-sm bg-m-amber text-m-white">
+                    <i class="icon ion-ios-cart"></i>
+                    <small class="text-uppercase">DHL</small>
+                    <h1 class="m-0 text-center" data-total="totalDHL">-</h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-icon">
+                <div class="card-body card-padding-sm bg-m-green bg-m-accent-4 text-m-white">
+                    <i class="icon ion-log-in"></i>
+                    <small class="text-uppercase">Revenue</small>
+                    <h1 class="m-0 text-center" data-total="totalRevenue">-</h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-icon">
+                <div class="card-body card-padding-sm bg-m-blue-gray bg-m-darken-1 text-m-white">
+                    <i class="icon ion-log-out"></i>
+                    <small class="text-uppercase">Transfer</small>
+                    <h1 class="m-0 text-center" data-total="totalTransfer">-</h1>
+                </div>
+            </div>
+        </div>
+        @*<div class="col-md-3">
+                <div class="card card-icon">
+                    <div class="card-body card-padding-sm bg-m-light-blue bg-m-darken-1 text-m-white">
+                        <i class="icon ion-pricetag"></i>
+                        <small class="text-uppercase">COD</small>
+                        <h1 class="m-0 text-center" data-total="codAmount">-</h1>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-icon">
+                    <div class="card-body card-padding-sm text-m-white" style="background-color: #0DB103;">
+                        <i class="icon ion-ios-chatbubble"></i>
+                        <small class="text-uppercase">LINE Pay</small>
+                        <h1 class="m-0 text-center" data-total="linePay">-</h1>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-icon">
+                    <div class="card-body card-padding-sm bg-m-blue-gray bg-m-darken-2 text-m-white">
+                        <i class="icon ion-card"></i>
+                        <small class="text-uppercase">Credit</small>
+                        <h1 class="m-0 text-center" data-total="credit">-</h1>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-icon">
+                    <div class="card-body card-padding-sm bg-m-teal text-m-white">
+                        <i class="icon ion-social-bitcoin"></i>
+                        <small class="text-uppercase">Cash</small>
+                        <h1 class="m-0 text-center" data-total="cash">-</h1>
+                    </div>
+                </div>
+            </div>*@
+    </div>
+
+    <div class="m-b-15">
+        <div class="row">
+            <div class="col-sm-6 col-md-4 m-t-30">
+                <div class="block-header">
+                    <h2 class="block-title">Revenue (Only freight)</h2>
+                </div>
+                <div class="card">
+                    <div class="card-body card-padding card-body-inverse bg-m-green bg-m-accent-4">
+                        <div class="row">
+                            <label class="col-xs-4 control-label">Cash</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static" data-total="totalCash">-</p></div>
+                        </div>
+                        <div class="row">
+                            <label class="col-xs-4 control-label">Rabbit</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static" data-total="totalRabbit">-</p></div>
+                        </div>
+                        <div class="row">
+                            <label class="col-xs-4 control-label">Creadit</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static" data-total="totalCredit">-</p></div>
+                        </div>
+                        <div class="row">
+                            <label class="col-xs-4 control-label">LINE Pay</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static" data-total="totalLinePay">-</p></div>
+                        </div>
+                        <div class="row hidden-xs">
+                            <label class="col-xs-4 control-label">&nbsp;</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static">&nbsp;</p></div>
+                        </div>
+                        <hr />
+                        <div class="row">
+                            <label class="col-xs-4 control-label">Total</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static"><strong data-total="totalRevenueOnlyFreight">-</strong></p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 m-t-30">
+                <div class="block-header">
+                    <h2 class="block-title">Value-Added Services</h2>
+                </div>
+                <div class="card">
+                    <div class="card-body card-padding card-body-inverse bg-m-light-green bg-m-accent-5">
+                        <div class="row">
+                            <label class="col-xs-4 control-label">COD</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static" data-total="totalCOD">-</p></div>
+                        </div>
+                        <div class="row">
+                            <label class="col-xs-4 control-label">Insurance</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static" data-total="totalInsurance">-</p></div>
+                        </div>
+                        <div class="row">
+                            <label class="col-xs-4 control-label">BSD</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static" data-total="totalBSD">-</p></div>
+                        </div>
+                        <div class="row">
+                            <label class="col-xs-4 control-label">Line Top-Up</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static" data-total="totalLineTopUp">-</p></div>
+                        </div>
+                        <div class="row">
+                            <label class="col-xs-4 control-label">Package</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static" data-total="totalPackage">-</p></div>
+                        </div>
+                        <hr />
+                        <div class="row">
+                            <label class="col-xs-4 control-label">Total</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static"><strong data-total="totalValueAddedService">-</strong></p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-4 m-t-30">
+                <div class="block-header">
+                    <h2 class="block-title">Summary Transfer</h2>
+                </div>
+                <div class="card">
+                    <div class="card-body card-padding card-body-inverse bg-m-blue-gray bg-m-darken-1">
+                        <div class="row">
+                            <label class="col-xs-4 control-label">POS</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static" data-total="totalTransferPOS">-</p></div>
+                        </div>
+                        <div class="row">
+                            <label class="col-xs-4 control-label">BSD</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static" data-total="totalTransferBSD">-</p></div>
+                        </div>
+                        <div class="row hidden-xs hidden-sm">
+                            <label class="col-xs-4 control-label">&nbsp;</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static">&nbsp;</p></div>
+                        </div>
+                        <div class="row hidden-xs hidden-sm">
+                            <label class="col-xs-4 control-label">&nbsp;</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static">&nbsp;</p></div>
+                        </div>
+                        <div class="row hidden-xs hidden-sm">
+                            <label class="col-xs-4 control-label">&nbsp;</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static">&nbsp;</p></div>
+                        </div>
+                        <hr />
+                        <div class="row">
+                            <label class="col-xs-4 control-label">Total</label>
+                            <div class="col-xs-7 text-right"><p class="form-control-static"><strong data-total="totalTransfer">-</strong></p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

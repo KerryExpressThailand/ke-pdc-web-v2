@@ -1,0 +1,63 @@
+.modal-confirm hr {
+  margin: 0 0 5px 0; }
+
+.modal-confirm .modal-title {
+  font-family: Prompt, Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+
+.modal-confirm .modal-body > .row {
+  margin: 0; }
+  .modal-confirm .modal-body > .row > .col-md-6 {
+    padding: 0; }
+    .modal-confirm .modal-body > .row > .col-md-6 .row,
+    .modal-confirm .modal-body > .row > .col-md-6 .form-group {
+      margin-left: -5px;
+      margin-right: -5px; }
+      .modal-confirm .modal-body > .row > .col-md-6 .row .col-sm-6,
+      .modal-confirm .modal-body > .row > .col-md-6 .form-group .col-sm-6 {
+        padding-left: 5px;
+        padding-right: 5px; }
+
+.modal-confirm .form-group {
+  margin-bottom: 5px; }
+
+.modal-confirm .total-transfer {
+  font-weight: bold;
+  text-decoration: underline; }
+
+.modal-confirm .parcel-shop {
+  padding-right: 14px;
+  border-bottom: 1px solid #FF6D00;
+  margin-bottom: 30px; }
+  @media (min-width: 992px) {
+    .modal-confirm .parcel-shop {
+      border-right: 1px solid #FF6D00;
+      border-bottom: none;
+      margin-bottom: 0; } }
+
+.modal-confirm .bangkok-sameday,
+.modal-confirm .rtsp-psp {
+    padding-left: 15px;
+}
+
+.modal-confirm .confirm-title {
+  margin: 0 0 10px;
+  font-size: 20px;
+  text-align: center; }
+
+.modal-confirm .adjustment-title {
+  margin-top: 5px;
+  padding-top: 10px;
+  border-top: 1px solid #FF6D00; }
+
+.modal-confirm .card {
+  margin-bottom: 15px; }
+
+.modal-confirm .card-title {
+  font-size: 16px;
+  text-align: center;
+  font-family: Prompt, Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+
+.modal-confirm .total {
+  font-weight: bold;
+  text-decoration: underline;
+  margin: 0; }

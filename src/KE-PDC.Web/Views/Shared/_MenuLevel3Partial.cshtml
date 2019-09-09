@@ -1,0 +1,42 @@
+﻿@{
+    //var controller = ViewContext.RouteData.Values["controller"].ToString();
+    //var action = ViewContext.RouteData.Values["action"].ToString();
+    //User UserData = ViewData["UserData"] as User;
+    //Menu Menus = ViewData["MenusLevel3"] as Menu;
+    //List<UserMenu> UserMenu = ViewData["UserMenu"] as List<UserMenu>;
+
+    var controller = ViewContext.RouteData.Values["controller"].ToString();
+    var action = ViewContext.RouteData.Values["action"].ToString();
+    var UserData = ViewData["UserData"] as UserMapRole;
+    Menu Menus = ViewData["MenusLevel3"] as Menu;
+    List<UserMenuRole> UserMenu = ViewData["UserMenu"] as List<UserMenuRole>;
+}
+
+@if (UserMenu.Exists(m => m.MenuId.Equals(Menus.Id)))
+{
+    <li class="@(controller.Equals(Menus.Controller) && action.Equals(Menus.Action) ? "active subnav-open" : "")">
+        @if (string.IsNullOrEmpty(Menus.Url))
+        {
+            <a asp-area="" asp-controller="@Menus.Controller" asp-action="@Menus.Action">
+                <i class="icon @(string.IsNullOrEmpty(Menus.Icon) ? "ion-ios-arrow-right" : Menus.Icon)"><b class="bg-m-orange bg-m-darken-4"></b></i>
+                <span>@Localizer[Menus.LinkText]</span>
+            </a>
+            @*@if (Menus.Children.FirstOrDefault().Where(m => UserMenu.Any(u => u.MenuId.Equals(m.Id))).Count() > 0 || UserData.UserGroupId.Equals(UserGroupStatus.Administrators))
+                {
+                    <ul class="nav" aria-expanded="true" role="menu">
+                        @foreach (Menu menusChildren in Menus.Children.FirstOrDefault())
+                        {
+                            @Html.Partial("_MenuPartial", this.ViewData);
+                        }
+                    </ul>
+                }*@
+        }
+        else
+        {
+            <a href="@Menus.Url" target="_blank">
+                <i class="icon @(string.IsNullOrEmpty(Menus.Icon) ? "ion-ios-arrow-right" : Menus.Icon)"><b class="bg-m-orange bg-m-darken-4"></b></i>
+                <span>@Localizer[Menus.LinkText]</span>
+            </a>
+        }
+    </li>
+}

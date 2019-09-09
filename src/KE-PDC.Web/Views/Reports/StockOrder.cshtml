@@ -1,0 +1,181 @@
+﻿@{
+    ViewData["Title"] = "Stock Order";
+}
+
+@section links {
+    <link rel="stylesheet" href="~/lib/bootstrap-select/dist/css/bootstrap-select.css" />
+    <link rel="stylesheet" href="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.css" />
+    <link rel="stylesheet" href="~/assets/vendor/thbank-font/css/thbanklogos.min.css" />
+    <link rel="stylesheet" href="~/assets/stylesheets/confirm.css" />
+    <style>
+        .divider-y:after {
+            content: "";
+            width: 1px;
+            background-color: #eeeeee;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+}
+
+@section scripts {
+    <script src="~/lib/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.js"></script>
+    <script src="~/lib/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+    <script src="~/lib/jquery-maskmoney/dist/jquery.maskMoney.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/moment/min/moment-with-locales.min.js"></script>
+    <script src="~/lib/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/lib/bootstrap-tagsinput/dist/bootstrap-tagsinput.js"></script>
+    <script src="~/lib/matchheight/dist/jquery.matchHeight-min.js"></script>
+    <script src="~/assets/javascripts/bootstrap-select-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootgrid-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootstrap-datetimepicker.js"></script>
+    <script src="~/assets/javascripts/jquery.validation-default.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            let fractionDigits = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+
+            // FORM SEARCH
+            // ======================
+            var searchFirstTime = true;
+            var gridSearchResults;
+
+            $('[type=reset]').click(function (e) {
+                e.preventDefault();
+                $(this).closest('form').get(0).reset();
+                $("select").selectpicker('render');
+            });
+
+            $("#form-search").validate({
+                submitHandler: function (form) {
+                    $.pageLoader("show");
+                    var $form = $(form);
+
+                    if (searchFirstTime) {
+                        searchFirstTime = false;
+
+                        gridSearchResults = $("#grid-search-results").bootgrid({
+                            statusMapping: {
+                                0: "",
+                                1: "",
+                                2: "warning",
+                                3: "info",
+                                4: "success",
+                                5: "danger"
+                            },
+                            ajaxSettings: {
+                                method: "POST",
+                            },
+                            url: endpoint + "Stock/Order/Get",
+                            requestHandler: function (request) {
+                                var BranchList = $form.find('select[name="BranchList"]').val(),
+                                    req = {
+                                        BranchType: $form.find('select[name="BranchType"]').val(),
+                                        BranchList: typeof BranchList == "object" ? BranchList.join(",") : BranchList,
+                                        DateFrom: $form.find('input[name="DateFrom"]').val(),
+                                        DateTo: $form.find('input[name="DateTo"]').val() || "@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))",
+
+                                        // Pagination
+                                        page: request.current,
+                                        perPage: request.rowCount,
+                                        order: Object.keys(request.sort)[0],
+                                        direction: request.sort[Object.keys(request.sort)[0]],
+                                        searchPhrase: request.searchPhrase,
+                                    };
+
+                                $("#grid-search-results").data("export-params", req);
+
+                                return req;
+                            },
+                            sorting: false,
+                            templates: {
+                                header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static">@SharedLocalizer["Search Results"]</h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20"><buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-search-results">@SharedLocalizer["Export (Excel)"]</buttom></div></div></div></div>',
+                            },
+                            formatters: {
+                                captured: function (column, row) {
+                                    return row[column.id] ? "Yes" : "No";
+                                }
+                            }
+                        })
+                        .on("loaded.rs.jquery.bootgrid", function () {
+                            $.pageLoader("hide");
+
+                            gridSearchResults
+                            .find('[data-toggle="tooltip"]').tooltip({
+                                container: "body",
+                            }).end();
+                        });
+
+                        $("#card-search-results, #card-search-status").delay(500).fadeIn(300);
+                    }
+                    else {
+                        gridSearchResults.bootgrid("reload");
+                    }
+                }
+            });
+
+            // EXPORT
+            // ======================
+            $("body").on("click", '[data-ke-action="export"]', function (e) {
+                var $this = $(this),
+                    $target = $($this.data("ke-target")),
+                    params = $target.data("export-params"),
+                    filetype = $this.data("ke-filetype"),
+                    type = $this.data("ke-type");
+
+                params.filetype = filetype;
+                params.type = type;
+
+                var form = $('<form/>');
+                form.attr('action', endpoint + 'Stock/Order/Get').attr('method', 'POST').attr('target', '_blank');
+
+                $.each(params, function (k, v) {
+                    if (typeof v !== 'undefined') {
+                        $(form).append($('<input name="' + k + '" value="' + v + '" type="hidden">'));
+                    }
+                });
+
+                $('body').append(form);
+
+                form.submit();
+                form.remove();
+            });
+        });
+
+    </script>
+}
+
+<div class="block-header">
+    <h2 class="block-title">@ViewData["Title"]</h2>
+</div>
+
+@await Html.PartialAsync("FormSearch/_TypeBranchDateFromDateToPartial")
+
+<div id="card-search-results" class="card" style="display: none;">
+    <div class="card-body table-responsive">
+        <div>
+            <table id="grid-search-results" class="table table-card table-bordered table-condensed table-hover unordered">
+                <thead>
+                    <tr>
+                        <th data-column-id="erP_ID" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["ERP ID"]</th>
+                        <th data-column-id="branchID" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["Branch"]</th>
+                        <th data-column-id="orderID" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="center" data-css-class="text-center">@SharedLocalizer["Order No"]</th>
+                        <th data-column-id="status" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="center" data-css-class="text-center">@Localizer["Status"]</th>
+                        <th data-column-id="orderDate" data-type="date" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Order No"]</th>
+                        <th data-column-id="deliveryDate" data-type="date" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Status"]</th>
+                        <th data-column-id="packageID" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Package ID"]</th>
+                        <th data-column-id="packageDescription" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Package Description"]</th>
+                        <th data-column-id="unit" data-header-css-class="bg-m-amber bg-m-lighten-5">@Localizer["Unit"]</th>
+                        <th data-column-id="orderQuantity" data-type="number" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="right" data-css-class="text-right">@Localizer["Order Quantity"]</th>
+                        <th data-column-id="unitPrice" data-type="decimal" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="right" data-css-class="text-right">@Localizer["Unit Price"]</th>
+                        <th data-column-id="packingQuantity" data-type="number" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="right" data-css-class="text-right">@Localizer["Packing Quantity"]</th>
+                        <th data-column-id="amount" data-type="decimal" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="right" data-css-class="text-right">@Localizer["Amount"]</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>

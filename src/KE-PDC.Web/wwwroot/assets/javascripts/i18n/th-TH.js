@@ -1,0 +1,46 @@
+﻿window._i18n = _i18n = {
+    ajaxStatus501: {
+        title: 'มีบางอย่างผิดพลาด',
+        desc: 'โปรดลองใหม่อีกครั้ง หากยังไม่สำเร็จโปรดแจ้งให้ผู้ดูแลทราบ',
+    },
+    datetimepickerTooltips: {
+        today: 'วันนี้',
+        clear: 'ยกเลิกการเลิก',
+        close: 'ปิด',
+        selectMonth: 'เลือกเดือน',
+        prevMonth: 'เดือนก่อนหน้า',
+        nextMonth: 'เดือนถัดไป',
+        selectYear: 'เลือกปี',
+        prevYear: 'ปีก่อนหน้า',
+        nextYear: 'ปีถัดไป',
+        selectDecade: 'เลือกทศวรรษ',
+        prevDecade: 'ทศวรรษก่อนหน้า',
+        nextDecade: 'ทศวรรษถัดไป',
+        prevCentury: 'ศตวรรษก่อนหน้า',
+        nextCentury: 'ศตวรรษถัดไป',
+        pickHour: 'เลือกชั่วโมง',
+        incrementHour: 'เพิ่มชั่วโมง',
+        decrementHour: 'ลดชั่วโมง',
+        pickMinute: 'เลือกนาที',
+        incrementMinute: 'เพิ่มนาที',
+        decrementMinute: 'ลดนาที',
+        pickSecond: 'เลือกวินาที',
+        incrementSecond: 'เพิ่มวินาที',
+        decrementSecond: 'ลบวินาที',
+        togglePeriod: 'สลับช่วงเวลา',
+        selectTime: 'เลือกเวลา'
+    },
+    selectpicker: {
+        deselectAllText: 'ยกเลิกการเลือก',
+        noneSelectedText: 'ไม่มีการเลือก',
+        selectAllText: 'เลือกทั้งหมด',
+    },
+    bootgridLabels: {
+        all: "ทั้งหมด",
+        infos: "กำลังแสดง {{ctx.start}} ถึง {{ctx.end}} จากทั้งหมด {{ctx.total}} รายการ",
+        loading: "กำลังโหลด...",
+        noResults: "ไม่พบผลลัพธ์!",
+        refresh: "โหลดใหม่",
+        search: "ค้นหา"
+    },
+}

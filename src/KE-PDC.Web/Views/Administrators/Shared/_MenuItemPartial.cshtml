@@ -1,0 +1,86 @@
+﻿@model Menu
+<li data-id="@Model.Id" @Html.Raw(string.IsNullOrEmpty(Model.Url) ? $"data-controller=\"{Model.Controller}\" data-action=\"{Model.Action}\"" : $"data-url=\"{Model.Url}\"") data-link-text="@Model.LinkText" data-icon="@Model.Icon">
+    <div class="menu-item">
+        <div class="ui-sortable-handle bar">
+            <div class="title">
+                <span class="text"><i class="icon @(string.IsNullOrEmpty(Model.Icon) ? "ion-ios-arrow-right" : Model.Icon)"></i> @Model.LinkText</span>
+                @if (Model.Children.FirstOrDefault().Count() > 0)
+                {
+                    <span class="badge">@Model.Children.FirstOrDefault().Count()</span>
+                }
+            </div>
+            <div class="controls">
+                <span class="type">@(string.IsNullOrEmpty(@Model.Url) ? "Page" : "Custom Link")</span>
+                <span class="edit collapsed" data-toggle="collapse" data-target="#collapse_@Model.Id" aria-expanded="false" aria-controls="collapse_@Model.Id"></span>
+            </div>
+        </div>
+        <div class="settings collapse" id="collapse_@Model.Id">
+            <div class="p-10 form-horizontal">
+                @if (string.IsNullOrEmpty(@Model.Url))
+                {
+                    <div class="form-group">
+                        <label for="inputController_@Model.Id" class="col-md-3 control-label">Controller</label>
+                        <div class="col-md-9">
+                            <input type="text" class="form-control" id="inputController_@Model.Id" name="Controller">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputAction_@Model.Id" class="col-md-3 control-label">Action</label>
+                        <div class="col-md-9">
+                            <input type="text" class="form-control" id="inputAction_@Model.Id" name="Action">
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <label for="inputURL_@Model.Id" class="col-md-3 control-label">URL</label>
+                        <div class="col-md-9">
+                            <input type="text" class="form-control" id="inputURL_@Model.Id" name="URL">
+                        </div>
+                    </div>
+                }
+                <div class="form-group">
+                    <label for="inputLinkText_@Model.Id" class="col-md-3 control-label">Link Text</label>
+                    <div class="col-md-9">
+                        <input type="text" class="form-control" id="inputLinkText_@Model.Id" name="LinkText">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="inputIcon_@Model.Id" class="col-md-3 control-label">Icon</label>
+                    <div class="col-md-9">
+                        <div class="btn-group" role="group" aria-label="Select Icon">
+                            <button type="button" class="btn btn-default btn-icon-text" data-toggle="modal" data-target="#modalSelectIcon" data-target-input="#inputIcon_@Model.Id">
+                                None Select
+                            </button>
+                            <button type="button" class="btn btn-icon btn-default" data-toggle="clear-icon" data-target="#inputIcon_@Model.Id"><i class="ion-android-close"></i></button>
+                        </div>
+                        <input type="hidden" id="inputIcon_@Model.Id" name="Icon" />
+                        @*<select id="inputIcon_@Model.Id" name="Icon" class="selectpicker" data-width="100%" data-live-search="true">
+                            @Html.Partial("_OptionIonIconPartial")
+                        </select>*@
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-5 col-lg-offset-3">
+                        <button data-toggle="save" class="btn btn-outline-primary">Save</button>
+                    </div>
+                    <div class="col-md-4 text-md-right">
+                        <a data-toggle="remove" class="text-danger">Remove</a>
+                        |
+                        <a data-toggle="cancel" class="text-m-gray">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <ul>
+        @if (Model.Children.FirstOrDefault().Count() > 0)
+        {
+            foreach (Menu menu in Model.Children.FirstOrDefault())
+            {
+                @Html.Partial("Shared/_MenuItemPartial", menu)
+            }
+        }
+    </ul>
+</li>

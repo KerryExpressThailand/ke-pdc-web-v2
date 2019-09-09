@@ -1,0 +1,46 @@
+﻿var _i18n = {
+    ajaxStatus501: {
+        title: 'Something went wrong',
+        desc: 'Try that again, and if it still doesn\'t work, let us know',
+    },
+    datetimepickerTooltips: {
+        today: 'Go to today',
+        clear: 'Clear selection',
+        close: 'Close the picker',
+        selectMonth: 'Select Month',
+        prevMonth: 'Previous Month',
+        nextMonth: 'Next Month',
+        selectYear: 'Select Year',
+        prevYear: 'Previous Year',
+        nextYear: 'Next Year',
+        selectDecade: 'Select Decade',
+        prevDecade: 'Previous Decade',
+        nextDecade: 'Next Decade',
+        prevCentury: 'Previous Century',
+        nextCentury: 'Next Century',
+        pickHour: 'Pick Hour',
+        incrementHour: 'Increment Hour',
+        decrementHour: 'Decrement Hour',
+        pickMinute: 'Pick Minute',
+        incrementMinute: 'Increment Minute',
+        decrementMinute: 'Decrement Minute',
+        pickSecond: 'Pick Second',
+        incrementSecond: 'Increment Second',
+        decrementSecond: 'Decrement Second',
+        togglePeriod: 'Toggle Period',
+        selectTime: 'Select Time'
+    },
+    selectpicker: {
+        deselectAllText: 'Deselect All',
+        noneSelectedText: 'Nothing selected',
+        selectAllText: 'Select All',
+    },
+    bootgridLabels: {
+        all: "All",
+        infos: "Showing {{ctx.start}} to {{ctx.end}} of {{ctx.total}} entries",
+        loading: "Loading...",
+        noResults: "No results found!",
+        refresh: "Refresh",
+        search: "Search"
+    },
+}

@@ -1,0 +1,385 @@
+﻿@model MonthlyExpenseUpdateViewModel
+
+<div id="modalUpdateDetail" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <form id="formUpdateDetail" class="form-horizontal" method="post" enctype="multipart/form-data">
+            <input asp-for="BranchID" type="hidden" data-column-id="branchID" />
+            <input asp-for="MonthYear" type="hidden" data-column-id="MonthYear" />
+
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Update #<span data-column-id="branchID"></span>&nbsp;&nbsp;&nbsp;Month/Year #<span data-column-id="MonthYear"></span></h4>
+                </div>
+                <div class="modal-body">
+                    <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                        @* Management Fee *@
+                        <fieldset id="fieldsetManagementFee" class="m-b-5">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <div class="row">
+                                        <h4 class="panel-title">
+                                            <label for="inputManagementFee" class="col-sm-4 col-md-3 control-label">
+                                                Management Fee
+                                            </label>
+                                        </h4>
+                                        <div class="col-sm-6 col-md-4">
+                                            <div class="input-group">
+                                                <input asp-for="ManagementFeeID" type="hidden" name="ManagementFeeID" id="inputManagementFeeID" autocomplete="off">
+                                                <input asp-for="ManagementFee" type="text" class="form-control text-right" id="inputManagementFee" autocomplete="off">
+                                                <span class="input-group-addon">THB</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        @* Service Fee - IT *@
+                        <div class="panel panel-default">
+                            <div class="panel-heading" role="tab" id="headingServiceFeeIT">
+                                <div class="row">
+                                    <h4 class="panel-title">
+                                        <label for="inputServiceFeeIT" class="col-sm-4 col-md-3 control-label">
+                                            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseServiceFeeIT" aria-expanded="false" aria-controls="collapseServiceFeeSupply">
+                                                Service Fee - IT
+                                            </a>
+                                        </label>
+                                    </h4>
+                                    <div class="col-sm-6 col-md-4">
+                                        <div class="input-group">
+                                            <input asp-for="ServiceFeeIT" type="text" class="form-control text-right" id="inputServiceFeeIT" autocomplete="off" readonly>
+                                            <span class="input-group-addon">THB</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="collapseServiceFeeIT" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingServiceFeeIT">
+                                <div class="panel-body p-t-5 p-b-5">
+                                    <fieldset id="fieldsetServiceFeeIT">
+                                        <table id="tableServiceFeeIT" class="table table-condensed m-0">
+                                            <thead>
+                                                <tr>
+                                                    <th width="30px">&nbsp;</th>
+                                                    <th>Item</th>
+                                                    <th class="text-right">Cost</th>
+                                                    <th>Remark</th>
+                                                    <th width="120px">&nbsp;</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr class="init">
+                                                    <td><input type="hidden" name="ServiceFeeITTrash" value="false" autocomplete="off" data-id="trash" /><button type="button" class="btn btn-link p-l-5 p-r-5" data-dismiss="row" data-target="ServiceFeeIT">&times;</button></td>
+                                                    <td>
+                                                        <input asp-for="ServiceFeeITID" name="ServiceFeeITID" type="hidden" autocomplete="off">
+                                                        <input asp-for="ServiceFeeITItem" type="text" name="ServiceFeeITItem" class="form-control input-sm name" autocomplete="off">
+                                                    </td>
+                                                    <td><input asp-for="ServiceFeeITExpense" type="text" name="ServiceFeeITExpense" class="form-control input-sm text-right expense" autocomplete="off" data-target="ServiceFeeIT"></td>
+                                                    <td><input asp-for="ServiceFeeITRemark" type="text" name="ServiceFeeITRemark" class="form-control input-sm remark" autocomplete="off"></td>
+                                                    <td>
+                                                        <div class="fileinput fileinput-new p-0" data-provides="fileinput">
+                                                            <span class="btn btn-sm btn-outline-primary btn-file">
+                                                                <span class="fileinput-new"><i class="ion-upload"></i> Attach file</span>
+                                                                <span class="fileinput-exists"><i class="ion-loop"></i> Change</span>
+                                                                <input asp-for="ServiceFeeITAttach" type="file" name="ServiceFeeITAttach">
+                                                            </span>
+                                                            <span class="fileinput-filename sr-only"></span>
+                                                            <a href="#" data-dismiss="fileinput" class="btn btn-sm btn-primary fileinput-exists">
+                                                                <i class="ion-trash-b"></i>
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+
+                                        <div class="text-center">
+                                            <button type="button" data-command="new-row" data-target="#tableServiceFeeIT" class="btn btn-sm btn-icon btn-circle btn-outline-primary">
+                                                <i class="ion-plus"></i>
+                                            </button>
+                                            <button type="button" data-command="reset-row" data-target="#tableServiceFeeIT" class="btn btn-sm btn-icon btn-circle btn-outline-primary">
+                                                <i class="ion-loop"></i>
+                                            </button>
+                                        </div>
+                                    </fieldset>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* Service Fee - Supply *@
+                        <div class="panel panel-default">
+                            <div class="panel-heading" role="tab" id="headingServiceFeeSupply">
+                                <div class="row">
+                                    <h4 class="panel-title">
+                                        <label for="inputServiceFeeSupply" class="col-sm-4 col-md-3 control-label">
+                                            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseServiceFeeSupply" aria-expanded="false" aria-controls="collapseServiceFeeSupply">
+                                                Service Fee - Supply
+                                            </a>
+                                        </label>
+                                    </h4>
+                                    <div class="col-sm-6 col-md-4">
+                                        <div class="input-group">
+                                            <input asp-for="ServiceFeeSupply" type="text" class="form-control text-right" id="inputServiceFeeSupply" autocomplete="off" readonly>
+                                            <span class="input-group-addon">THB</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="collapseServiceFeeSupply" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingServiceFeeSupply">
+                                <div class="panel-body p-t-5 p-b-5">
+                                    <fieldset id="fieldsetServiceFeeSupply">
+                                        <table id="tableServiceFeeSupply" class="table table-condensed m-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th class="text-right">Cost</th>
+                                                    <th>Remark</th>
+                                                    <th width="120px">&nbsp;</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @*<tr class="init">
+                                                    <td><input type="hidden" name="ServiceFeeSupplyTrash" value="false" autocomplete="off" data-id="trash" /><button type="button" class="btn btn-link p-l-5 p-r-5" data-dismiss="row" data-target="ServiceFeeSupply">&times;</button></td>
+                                                    <td>
+                                                        <input asp-for="ServiceFeeSupplyID" name="ServiceFeeSupplyID" type="hidden" autocomplete="off">
+                                                        <input asp-for="ServiceFeeSupplyItem" type="text" name="ServiceFeeSupplyItem" class="form-control input-sm name" autocomplete="off">
+                                                    </td>
+                                                    <td><input asp-for="ServiceFeeSupplyExpense" type="text" name="ServiceFeeSupplyExpense" class="form-control input-sm text-right expense" autocomplete="off" data-target="ServiceFeeSupply"></td>
+                                                    <td><input asp-for="ServiceFeeSupplyRemark" type="text" name="ServiceFeeSupplyRemark" class="form-control input-sm remark" autocomplete="off"></td>
+                                                    <td>
+                                                        <div class="fileinput fileinput-new p-0" data-provides="fileinput">
+                                                            <span class="btn btn-sm btn-outline-primary btn-file">
+                                                                <span class="fileinput-new"><i class="ion-upload"></i> Attach file</span>
+                                                                <span class="fileinput-exists"><i class="ion-loop"></i> Change</span>
+                                                                <input asp-for="ServiceFeeSupplyAttach" type="file" name="ServiceFeeSupplyAttach">
+                                                            </span>
+                                                            <span class="fileinput-filename sr-only"></span>
+                                                            <a href="#" data-dismiss="fileinput" class="btn btn-sm btn-primary fileinput-exists">
+                                                                <i class="ion-trash-b"></i>
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>*@
+                                            </tbody>
+                                        </table>
+
+                                        <div class="text-center">
+                                            <button type="button" data-command="new-row" data-target="#tableServiceFeeSupply" class="btn btn-sm btn-icon btn-circle btn-outline-primary">
+                                                <i class="ion-plus"></i>
+                                            </button>
+                                            <button type="button" data-command="reset-row" data-target="#tableServiceFeeSupply" class="btn btn-sm btn-icon btn-circle btn-outline-primary">
+                                                <i class="ion-loop"></i>
+                                            </button>
+                                        </div>
+                                    </fieldset>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* Service Fee - Facility *@
+                        <div class="panel panel-default">
+                            <div class="panel-heading" role="tab" id="headingServiceFeeFacility">
+                                <div class="row">
+                                    <h4 class="panel-title">
+                                        <label for="inputServiceFeeFacility" class="col-sm-4 col-md-3 control-label">
+                                            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseServiceFeeFacility" aria-expanded="false" aria-controls="collapseServiceFeeFacility">
+                                                Service Fee - Facility
+                                            </a>
+                                        </label>
+                                    </h4>
+                                    <div class="col-sm-6 col-md-4">
+                                        <div class="input-group">
+                                            <input asp-for="ServiceFeeFacility" type="text" class="form-control text-right" id="inputServiceFeeFacility" autocomplete="off" readonly>
+                                            <span class="input-group-addon">THB</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6 col-md-4">
+                                        <div class="input-group">
+                                            <span class="input-group-addon">+VAT</span>
+                                            <input asp-for="ServiceFeeFacilityVat" type="text" class="form-control text-right" id="inputServiceFeeFacilityVat" autocomplete="off" readonly>
+                                            <span class="input-group-addon">THB</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="collapseServiceFeeFacility" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingServiceFeeFacility">
+                                <div class="panel-body p-t-5 p-b-5">
+                                    <fieldset id="fieldsetServiceFeeFacility">
+                                        <table id="tableServiceFeeFacility" class="table table-condensed m-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th class="text-right">Cost</th>
+                                                    <th>Remark</th>
+                                                    <th width="120px">&nbsp;</th>
+                                                </tr>
+                                            </thead>
+                                            @{
+                                                List<string> facilities = new List<string>();
+                                                facilities.Add("Rent");
+                                                facilities.Add("Electricity bill");
+                                                facilities.Add("Water bill");
+                                                facilities.Add("Telephone bill");
+                                                facilities.Add("Mobile bill");
+                                                facilities.Add("Internet bill");
+                                            }
+                                            <tbody>
+                                                @foreach (var facility in facilities)
+                                                {
+                                                    var key = facility.Replace(" ", "_").ToUpper();
+                                                    <tr>
+                                                        <td>
+                                                            <input asp-for="ServiceFeeFacilityID" name="ServiceFeeFacilityID" type="hidden" data-item-id="@key" autocomplete="off">
+                                                            <input asp-for="ServiceFeeFacilityItem" type="hidden" name="ServiceFeeFacilityItem" data-item-id="@key" autocomplete="off" value="@key">
+                                                            <p class="form-control-static">@facility</p>
+                                                        </td>
+                                                        <td><input asp-for="ServiceFeeFacilityExpense" type="text" name="ServiceFeeFacilityExpense" class="form-control input-sm text-right expense" data-item-id="@key" autocomplete="off" data-target="ServiceFeeFacility"></td>
+                                                        <td><input asp-for="ServiceFeeFacilityRemark" type="text" name="ServiceFeeFacilityRemark" class="form-control input-sm remark" data-item-id="@key" autocomplete="off"></td>
+                                                        <td>
+                                                            <div class="fileinput fileinput-new p-0" data-provides="fileinput">
+                                                                <span class="btn btn-sm btn-outline-primary btn-file">
+                                                                    <span class="fileinput-new"><i class="ion-upload"></i> Attach file</span>
+                                                                    <span class="fileinput-exists"><i class="ion-loop"></i> Change</span>
+                                                                    <input asp-for="ServiceFeeFacilityAttach" type="file" data-item-id="@key" name="ServiceFeeFacilityAttach">
+                                                                </span>
+                                                                <span class="fileinput-filename sr-only"></span>
+                                                                <a href="#" data-dismiss="fileinput" class="btn btn-sm btn-primary fileinput-exists">
+                                                                    <i class="ion-trash-b"></i>
+                                                                </a>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+
+                                        <div class="text-center">
+                                            <button type="button" data-command="new-row" data-target="#tableServiceFeeFacility" class="btn btn-sm btn-icon btn-circle btn-outline-primary">
+                                                <i class="ion-plus"></i>
+                                            </button>
+                                            <button type="button" data-command="reset-row" data-target="#tableServiceFeeFacility" class="btn btn-sm btn-icon btn-circle btn-outline-primary">
+                                                <i class="ion-loop"></i>
+                                            </button>
+                                        </div>
+                                    </fieldset>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* Sales Package *@
+                        <div class="panel panel-default m-b-5">
+                            <div class="panel-heading" role="tab" id="headingSalesPackage">
+                                <div class="row">
+                                    <h4 class="panel-title">
+                                        <label for="inputSalesPackage" class="col-sm-4 col-md-3 control-label">
+                                            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseSalesPackage" aria-expanded="false" aria-controls="collapseServiceFeeFacility">
+                                                Sales Package
+                                            </a>
+                                        </label>
+                                    </h4>
+                                    <div class="col-sm-6 col-md-4">
+                                        <div class="input-group">
+                                            <input asp-for="SalesPackage" type="text" class="form-control text-right" id="inputSalesPackage" autocomplete="off" readonly>
+                                            <span class="input-group-addon">THB</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="collapseSalesPackage" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingSalesPackage">
+                                <div class="panel-body p-t-5 p-b-5">
+                                    <fieldset id="fieldsetSalesPackage">
+                                        <table id="tableSalesPackage" class="table table-condensed m-0">
+                                            <thead>
+                                                <tr>
+                                                    <th width="15%">Item</th>
+                                                    <th class="text-right">Quantity</th>
+                                                    <th class="text-right" width="20%">Expense</th>
+                                                    <th>Remark</th>
+                                                    <th width="120px">&nbsp;</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var package in ViewData["PackageList"] as List<Package>)
+                                                {
+                                                    string UnitPrice = package.UnitPrice.HasValue ? package.UnitPrice.Value.ToString("N0") : "0";
+                                                    <tr>
+                                                        <td>
+                                                            <input asp-for="SalesPackageID" type="hidden" name="SalesPackageID" autocomplete="off" data-item-id="@package.PackageID">
+                                                            <input asp-for="SalesPackageItem" type="hidden" name="SalesPackageItem" value="@package.PackageID" autocomplete="off">
+                                                            <p class="form-control-static">@package.PackageDesc</p>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                <input asp-for="SalesPackageAmount" type="text" name="SalesPackageAmount" class="form-control input-sm text-right maskmoney" data-precision="0" data-cost="@package.UnitPrice" autocomplete="off" data-item-id="@package.PackageID" readonly>
+                                                                <span class="input-group-addon" style="width: 55px;">x @UnitPrice</span>
+                                                            </div>
+                                                        </td>
+                                                        <td><input asp-for="SalesPackageExpense" type="hidden" name="SalesPackageExpense" autocomplete="off" data-item-id="@package.PackageID"><p class="form-control-static input-sm text-right" data-item-id="@package.PackageID"></p></td>
+                                                        <td><input asp-for="SalesPackageRemark" type="text" name="SalesPackageRemark" class="form-control input-sm" autocomplete="off" data-item-id="@package.PackageID"></td>
+                                                        <td>
+                                                            <div class="fileinput fileinput-new p-0" data-provides="fileinput">
+                                                                <span class="btn btn-sm btn-outline-primary btn-file">
+                                                                    <span class="fileinput-new"><i class="ion-upload"></i> Attach file</span>
+                                                                    <span class="fileinput-exists"><i class="ion-loop"></i> Change</span>
+                                                                    <input asp-for="SalesPackageAttach" type="file" name="SalesPackageAttach">
+                                                                </span>
+                                                                <span class="fileinput-filename sr-only"></span>
+                                                                <a href="#" data-dismiss="fileinput" class="btn btn-sm btn-primary fileinput-exists">
+                                                                    <i class="ion-trash-b"></i>
+                                                                </a>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <td><strong>Total</strong></td>
+                                                    <td class="text-right" data-column-id="totalAmount"></td>
+                                                    <td class="text-right" data-column-id="totalExpense"></td>
+                                                    <td>&nbsp;</td>
+                                                    <td>&nbsp;</td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </fieldset>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* Adjustment *@
+                        <fieldset id="fieldsetAdjustment">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <div class="row">
+                                        <h4 class="panel-title">
+                                            <label for="inputAdjustment" class="col-sm-4 col-md-3 control-label">
+                                                Adjustment
+                                            </label>
+                                        </h4>
+                                        <div class="col-sm-4 col-md-4">
+                                            <div class="input-group">
+                                                <input asp-for="AdjustmentID" type="hidden" name="AdjustmentID" id="inputAdjustmentID" autocomplete="off">
+                                                <input asp-for="Adjustment" type="text" class="form-control text-right" id="inputAdjustment" autocomplete="off">
+                                                <span class="input-group-addon">THB</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4 col-md-4">
+                                            <div class="input-group">
+                                                <input asp-for="AdjustmentRemark" type="text" class="form-control text-right" id="inputAdjustmentRemark" autocomplete="off">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-outline-primary">Update</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </form>
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

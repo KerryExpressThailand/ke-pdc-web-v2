@@ -1,0 +1,50 @@
+﻿@{
+    List<Menu> menus;
+    Stream fs = System.IO.File.OpenRead($@"{env.ContentRootPath}\menus.json");
+    using (StreamReader reader = new StreamReader(fs))
+    {
+        menus = JsonConvert.DeserializeObject<List<Menu>>(await reader.ReadToEndAsync());
+    }
+
+    var controller = ViewContext.RouteData.Values["controller"].ToString();
+    var action = ViewContext.RouteData.Values["action"].ToString();
+    var userData = User.Claims.SingleOrDefault(c => c.Type.Equals("User")).Value;
+    UserMapRole UserData = JsonConvert.DeserializeObject<UserMapRole>(userData);
+    List<UserMenuRole> UserMenu = UserData.UserMenu;
+}
+
+@foreach (var menu in menus)
+{
+    @if (UserMenu.Exists(m => m.MenuId.Equals(menu.Id)))
+    {
+        <li class="@(controller.Equals(menu.Controller) ? "active" : "")">
+            @if (string.IsNullOrEmpty(menu.Url))
+            {
+                <a asp-area="" asp-controller="@menu.Controller" asp-action="@menu.Action" aria-expanded="false">
+                    <i class="icon @(string.IsNullOrEmpty(menu.Icon) ? "ion-help-buoy" : menu.Icon)"><b class="bg-m-orange bg-m-darken-4"></b></i>
+                    <span>@Localizer[menu.LinkText]</span>
+                    @if (menu.Children.Count() > 0 && (menu.Children.FirstOrDefault().Where(m => UserMenu.Any(u => u.MenuId.Equals(m.Id))).Count() > 0))
+                    {
+                        <i class="ion arrow"></i>
+                    }
+                </a>
+                @if (menu.Children.Count() > 0 && (menu.Children.FirstOrDefault().Where(m => UserMenu.Any(u => u.MenuId.Equals(m.Id))).Count() > 0))
+                {
+                    <ul class="nav" aria-expanded="true" role="menu">
+                        @foreach (Menu navChildren in menu.Children.FirstOrDefault())
+                        {
+                            @Html.Partial("_MenuLevel2Partial", new ViewDataDictionary(this.ViewData) { { "UserData", UserData }, { "MenusLevel2", navChildren }, { "UserMenu", UserMenu } });
+                        }
+                    </ul>
+                }
+            }
+            else
+            {
+                <a href="@menu.Url" target="_blank">
+                    <i class="icon @(string.IsNullOrEmpty(menu.Icon) ? "ion-ios-arrow-right" : menu.Icon)"><b class="bg-m-orange bg-m-darken-4"></b></i>
+                    <span>@Localizer[menu.LinkText]</span>
+                </a>
+            }
+        </li>
+    }
+}

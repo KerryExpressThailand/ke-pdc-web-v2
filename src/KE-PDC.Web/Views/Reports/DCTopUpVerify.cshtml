@@ -1,0 +1,411 @@
+﻿@model DCTopUpVerifySelectionViewModel
+
+@{
+    ViewData["Title"] = "DC Top-Up Verify";
+}
+
+@section links {
+    <link rel="stylesheet" href="~/lib/bootstrap-select/dist/css/bootstrap-select.css" />
+    <link rel="stylesheet" href="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.css" />
+}
+
+@section scripts {
+    <script src="~/lib/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.js"></script>
+    <script src="~/lib/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+    <script src="~/lib/jquery-maskmoney/dist/jquery.maskMoney.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/moment/min/moment-with-locales.min.js"></script>
+    <script src="~/lib/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/lib/bootstrap-tagsinput/dist/bootstrap-tagsinput.js"></script>
+    <script src="~/lib/matchheight/dist/jquery.matchHeight-min.js"></script>
+    <script src="~/assets/javascripts/bootstrap-select-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootgrid-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootstrap-datetimepicker.js"></script>
+    <script src="~/assets/javascripts/jquery.validation-default.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var getVal = function (val) {
+                return parseFloat(val.replace(/[^\d\.\-]/g, ""))
+            }
+
+            // FORM SEARCH
+            // ======================
+            var searchFirstTime = true;
+            var gridSearchResults;
+            var decimalToString = function (value) {
+                return parseFloat(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            var numericToString = function (value) {
+                return parseInt(value).toLocaleString();
+            }
+
+            $('#modalVerify').on('hidden.bs.modal', function (e) {
+                $(this).find('input.maskmoney').val('0.00');
+                $(this).find('input.remark').val('');
+            })
+
+            $('[type=reset]').click(function (e) {
+                e.preventDefault();
+                $(this).closest('form').get(0).reset();
+                $("select").selectpicker('render');
+            });
+
+            $('[data-id="verify-selection"]').on("click", function (e) {
+                e.preventDefault();
+                var checked = $("#grid-search-results tbody input:checked"),
+                    selected = [];
+
+                for (var i = 0; i < checked.length; i++) {
+                    var VerifyDate = checked.eq(i).parents("tr").find('[name="verifyDate"]').val();
+                    var RemittanceDate = checked.eq(i).parents("tr").find('[name="remittanceDate"]').val();
+                    selected.push(checked.eq(i).val());
+                }
+
+                if (selected.length == 0) {
+                    swal("Verify", "Please select the information to be verify!", "warning")
+                }
+                else {
+                    $("#modalVerifySelection")
+                    .find('[data-column-id="idList"]').val(typeof selected == "object" ? selected.join(",") : selected)
+                    .end().find('[data-column-id="branchTotal"]').text(typeof selected == "object" ? numericToString(selected.length) : 1)
+                    .end().modal("show");
+                }
+            });
+
+            $('form[data-toggle="search"]').each(function () {
+                $(this).validate({
+                    submitHandler: function (form) {
+                        $.pageLoader("show");
+                        var $form = $(form);
+
+                        $("#grid-search-results").data("target", $form.attr("id"));
+
+                        if (searchFirstTime) {
+
+                            searchFirstTime = false;
+
+                            gridSearchResults = $("#grid-search-results").bootgrid({
+                                ajaxSettings: {
+                                    method: "POST",
+                                },
+                                url: endpoint + "DCTopUpVerify/Get",
+                                requestHandler: function (request) {
+                                    var BranchList = $form.find('select[name="BranchList"]').val(),
+                                        request = {
+                                            BranchList: typeof BranchList == "object" ? BranchList.join(",") : BranchList,
+                                            DateFrom: $form.find('input[name="DateFrom"]').val(),
+                                            DateTo: $form.find('input[name="DateTo"]').val() || "@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))",
+
+                                            // Pagination
+                                            page: request.current,
+                                            perPage: request.rowCount,
+                                            order: Object.keys(request.sort)[0],
+                                            direction: request.sort[Object.keys(request.sort)[0]],
+                                            searchPhrase: request.searchPhrase,
+                                        };
+
+                                    $("#grid-search-results").data("export-params", request);
+
+                                    return request;
+                                },
+                                sorting: false,
+                                selection: true,
+                                multiSelect: true,
+                                templates: {
+                                    header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static">@SharedLocalizer["Search Results"]</h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20"><buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-search-results">@SharedLocalizer["Export (Excel)"]</buttom></div></div></div></div>',
+                                },
+                                formatters: {
+                                    commands: function (column, row) {
+                                        return '<button class="btn btn-sm ' + (row.tudVerifyDate == 1 ? 'btn-default' : 'btn-outline-warning') + '" data-command="verify" data-row-id="' + row.id + '" data-row-branch="' + row.branchID + '" data-row-report-date="' + row.reportDate + '"' + (row.fcConfirmed == 1 ? ' disabled' : '') + '><i class="ion-checkmark-round"></i> @Localizer["Verify"]</button>';
+                                    },
+                                    datepicker: function (column, row) {
+                                        return '<div class="input-group-icon"><span class="input-group-addon-icon"><i class="ion-calendar"></i></span><input name="' + column.id + '" class="form-control input-sm date-picker" data-mask="00/00/0000" value="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))"></div>';
+                                    },
+                                    //adjustment: function (column, row) {
+                                    //    return '<input name="' + column.id + '" class="form-control input-sm maskmoney" value="0.00" data-allow-zero="true" data-thousands="," data-decimal="." data-precision="2" data-allow-negative="true" placeholder="Adjustment">';
+                                    //},
+                                    status: function (column, row) {
+                                        console.log(row)
+                                        return (row.tudVerifyDate == 1 ? '<div data-id="verify-status"><span class="text-success">Verified</span></div>' : '');
+                                    },
+                                },
+                            })
+                            .on("loaded.rs.jquery.bootgrid", function () {
+                                $.pageLoader("hide");
+
+                                $(this).find(".date-picker").datetimepicker({
+                                    format: "DD/MM/YYYY",
+                                });
+
+                                $(this).find('.maskmoney').maskMoney();
+
+                                $(this).find('[data-command="verify"][disabled]').parents("tr")
+                                .addClass("bg-m-gray bg-m-lighten-3 text-m-gray")//.parents("tbody")
+                                .find('.select-box').prop("disabled", true).removeClass("select-box").addClass("select-box-disabled");
+
+                                $(this).find('[data-command="verify"]').on("click", function () {
+                                    var that = this,
+                                        id = $(this).data("row-id"),
+                                        BranchID = $(this).data("row-branch"),
+                                        ReportDate = moment($(this).data("row-report-date")).format("YYYYMMDD");
+
+                                    $.pageLoader("show");
+
+                                    $("#form-detail").data("branchID", BranchID);
+                                    $('#form-detail').attr('action', 'DCTopUpVerify/' + BranchID);
+                                    $('#form-detail input[name="ReportDate"').val(ReportDate);
+
+                                    $.get(endpoint + "DCTopUpVerify/" + BranchID, {
+                                        ReportDate: ReportDate,
+                                    }, function (response) {
+                                        var result = response.result[0];
+                                        if (response.success) {
+                                            $("#form-detail")
+                                                .find('[data-column-id="erP_ID"]').text(result.erP_ID)
+                                                .end().find('[data-column-id="branchID"]').text(result.branchID)
+                                                .end().find('[data-column-id="reportDate"]').text(moment(result.reportDate).format("DD/MM/YYYY"))
+                                                .end().find('[data-column-id="tud"]').text(result.tud.toLocaleString(undefined, { minimumFractionDigits: 2 }));
+
+                                            $('#modalVerify').modal("show");
+
+                                            $.pageLoader("hide");
+                                        }
+                                        else {
+                                            var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                                            swal("Error", message, "error");
+                                            return false;
+                                        }
+                                    });
+                                }).end()
+                                    .find('[data-toggle="tooltip"]').tooltip({
+                                        container: "body",
+                                    }).end();
+                            })
+                            .on("selected.rs.jquery.bootgrid", function (e) {
+                                $(this).find(".select-box-disabled").parents("tr.active").removeClass("active")
+                            });
+
+                            $("#card-search-results, #card-search-status").delay(500).fadeIn(300);
+                        }
+                        else {
+                            gridSearchResults.bootgrid("reload");
+                        }
+                    }
+                });
+            });
+
+            // FORM VERIFY SELECTION
+            // ======================
+            $("#formVerifySelection").validate({
+                submitHandler: function (form) {
+                    swal({
+                        title: "Are you sure?",
+                        text: "Confirm this information to be recorded",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonClass: "btn-outline-primary",
+                        confirmButtonText: "Yes, confirm it!",
+                        closeOnConfirm: false,
+                    }, function () {
+                        $.pageLoader("show");
+                        var $form = $(form);
+
+                        $.ajax({
+                            url: endpoint + "DCTopUpVerify",
+                            type: "POST",
+                            data: new FormData($form.get(0)),
+                            cache: false,
+                            contentType: false,
+                            processData: false,
+                            success: function (response) {
+                                if (response.success) {
+                                    swal("Verified", response.messages[0], "success");
+                                    $("#modalVerifySelection").modal("hide");
+                                    $("#grid-search-results").bootgrid("reload");
+                                }
+                                else {
+                                    var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                                    swal("Error", message, "error");
+                                    return false;
+                                }
+                                $.pageLoader("hide");
+                            }
+                        });
+
+                    });
+                }
+            });
+
+            // SUBMIT DC TOP-UP VERIFY
+            // ======================
+            $("#form-detail").validate({
+                submitHandler: function (form) {
+                    var $form = $(form),
+                        branchID = $form.data('branchID');
+
+                    swal({
+                        title: "Are you sure?",
+                        text: "Confirm this information to be recorded",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonClass: "btn-outline-primary",
+                        confirmButtonText: "Yes, confirm it!",
+                        closeOnConfirm: false
+                    }, function () {
+                        $.post(endpoint + "DCTopUpVerify/" + branchID, {
+                            ReportDate: moment($form.find('input[name="ReportDate"]').val()).format("YYYYMMDD"),
+                            VerifyDate: moment($form.find('input[name="VerifyDate"]').val(), "DD/MM/YYYY").format("YYYYMMDD"),
+                            RemittanceDate: moment($form.find('input[name="RemittanceDate"]').val(), "DD/MM/YYYY").format("YYYYMMDD"),
+                            BonusCommission: getVal($form.find('input[name="BonusCommission"]').val()),
+                            AdjustmentCreditCard: getVal($form.find('input[name="AdjustmentCreditCard"]').val()),
+                            AdjustmentOther: getVal($form.find('input[name="AdjustmentOther"]').val()),
+                            ReturnCharge: getVal($form.find('input[name="ReturnCharge"]').val()),
+                            Suspense: getVal($form.find('input[name="Suspense"]').val()),
+                            WithHoldingTax: getVal($form.find('input[name="WithHoldingTax"]').val()),
+                            Promotion: getVal($form.find('input[name="Promotion"]').val()),
+                            BankCharge: getVal($form.find('input[name="BankCharge"]').val()),
+                            AdjustmentLinePay: getVal($form.find('input[name="AdjustmentLinePay"]').val()),
+
+                            BonusCommissionRemark: $form.find('input[name="BonusCommissionRemark"]').val(),
+                            AdjustmentCreditCardRemark: $form.find('input[name="AdjustmentCreditCardRemark"]').val(),
+                            AdjustmentOtherRemark: $form.find('input[name="AdjustmentOtherRemark"]').val(),
+                            ReturnChargeRemark: $form.find('input[name="ReturnChargeRemark"]').val(),
+                            SuspenseRemark: $form.find('input[name="SuspenseRemark"]').val(),
+                            WithHoldingTaxRemark: $form.find('input[name="WithHoldingTaxRemark"]').val(),
+                            PromotionRemark: $form.find('input[name="PromotionRemark"]').val(),
+                            BankChargeRemark: $form.find('input[name="BankChargeRemark"]').val(),
+                            AdjustmentLinePayRemark: $form.find('input[name="AdjustmentLinePayRemark"]').val(),
+                        }, function (response) {
+                            if (response.success) {
+                                //$.each(branchList, function (index, value) {
+                                //    $("#grid-search-results").find('tr[data-row-id="' + value + '"]').remove();
+                                //});
+
+                                $("#grid-search-results").bootgrid("reload");
+                                swal("Verified", response.messages[0], "success");
+                                $('#modalVerify').modal("hide");
+                            }
+                            else {
+                                var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
+                                swal("Error", message, "error");
+                                return false;
+                            }
+                        });
+                    });
+                }
+            });
+
+            // EXPORT
+            // ======================
+            $("body").on("click", '[data-ke-action="export"]', function (e) {
+                var $this = $(this),
+                    $target = $($this.data("ke-target")),
+                    params = $target.data("export-params"),
+                    filetype = $this.data("ke-filetype"),
+                    type = $this.data("ke-type");
+
+                params.filetype = filetype;
+                params.type = type;
+
+                var form = $('<form/>');
+                form.attr('action', endpoint + 'DCTopUpVerify/Get').attr('method', 'POST').attr('target', '_blank');
+
+                $.each(params, function (k, v) {
+                    if (typeof v !== 'undefined') {
+                        $(form).append($('<input name="' + k + '" value="' + v + '" type="hidden">'));
+                    }
+                });
+
+                $('body').append(form);
+
+                form.submit();
+                form.remove();
+            });
+
+
+            $('#modalVerify').on('hidden.bs.modal', function () {
+                $(this).find('input[name="Adjustment"]').val('0.00');
+            });
+        });
+    </script>
+}
+
+<div class="block-header">
+    <h2 class="block-title">@Localizer[ViewData["Title"].ToString()]</h2>
+</div>
+
+@await Html.PartialAsync("Shared/_FormSearchBranchDateFromDateToPartial")
+
+<div id="card-search-results" class="card" style="display:none;">
+    <div class="card-body table-responsivex clearfix">
+        <div>
+            <table id="grid-search-results" class="table table-card table-bordered table-condensed table-hover unordered">
+                <thead>
+                    <tr>
+                        <th data-column-id="id" data-identifier="true" data-visible="false" data-visible-in-selection="false" data-width="50px"></th>
+                        <th data-column-id="erP_ID" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["ERP ID"]</th>
+                        <th data-column-id="branchID" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["Branch"]</th>
+                        <th data-column-id="commands" data-formatter="commands" data-css-class="text-center" data-header-css-class="bg-m-orange bg-m-lighten-5" data-header-align="center" data-width="auto; white-space: nowrap !important">@Localizer["Commands"]</th>
+                        <th data-column-id="status" data-formatter="status" data-css-class="text-center" data-header-css-class="bg-m-orange bg-m-lighten-5" data-header-align="center">@Localizer["Status"]</th>
+                        <th data-column-id="reportDate" data-type="date" data-header-css-class="bg-m-orange bg-m-lighten-5 text-center" data-css-class="text-center">@SharedLocalizer["Report date"]</th>
+                        <th data-column-id="tud" data-type="decimal" data-header-css-class="bg-m-orange bg-m-lighten-5 text-right" data-css-class="text-right">@SharedLocalizer["TUD"]</th>
+                        <th data-column-id="verifyDate" data-formatter="datepicker" data-header-css-class="bg-m-orange bg-m-lighten-5" data-css-class="datetimepicker" data-width="130px">@Localizer["Verify Date"]</th>
+                        <th data-column-id="remittanceDate" data-formatter="datepicker" data-header-css-class="bg-m-orange bg-m-lighten-5" data-css-class="datetimepicker" data-width="130px">@SharedLocalizer["Remittance date"]</th>
+                        @*<th data-column-id="adjustment" data-formatter="adjustment" data-header-css-class="bg-m-orange bg-m-lighten-5" data-width="130px">@Localizer["Adjustment"]</th>*@
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        <div class="text-right m-r-15 m-b-15">
+            <button class="btn btn-primary" data-id="verify-selection">Verify Selection</button>
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("Shared/_ModalDCTopUpVerifyPartial")
+
+<div id="modalVerifySelection" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-md" role="document">
+        <form id="formVerifySelection">
+            <input asp-for="IDList" type="hidden" data-column-id="idList" />
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Verify Selection</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="exampleInputEmail1">Branches Total</label>
+                                <p class="form-control-static"><span data-column-id="branchTotal">-</span> Branches</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="inputVerifyDate">Verify Date</label>
+                                <div class="input-group-icon">
+                                    <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                                    <input asp-for="VerifyDate" type="text" class="form-control date-picker input-mask" data-mask="00/00/0000" id="inputVerifyDate" value="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="inputRemittanceDate">Remittance Date</label>
+                                <div class="input-group-icon">
+                                    <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                                    <input asp-for="RemittanceDate" type="text" class="form-control date-picker input-mask" data-mask="00/00/0000" id="inputRemittanceDate" value="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-outline-primary">Verify</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </form>
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

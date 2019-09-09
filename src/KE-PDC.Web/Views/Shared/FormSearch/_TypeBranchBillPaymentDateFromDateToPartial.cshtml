@@ -1,0 +1,123 @@
+﻿@model TypeBranchDateFromDateToViewModel
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">@SharedLocalizer["Search"]</h2>
+    </div>
+    <div class="card-body card-padding">
+        <form id="form-search">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Branch type"]</label>
+                        <select asp-for="BranchType" id="Branch" class="selectpicker" data-ke-action="branch-type-list" data-ke-target="#Branch" data-width="100%" data-live-search="true" data-actions-box="true" title="@SharedLocalizer["Select branch type"]" multiple required disabled>
+                            <option value="-1" selected>Loading...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Region"]</label>
+                        <select asp-for="Region" id="Region" class="selectpicker text-uppercase" data-width="100%" data-live-search="true" data-actions-box="true" title="@SharedLocalizer["Select Region"]" multiple></select>
+                    </div>
+                </div>
+
+            </div>
+            @*region*@
+            <div class="row">
+
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Branch"]</label>
+                        <select asp-for="BranchList" id="BranchList" class="selectpicker" multiple data-width="100%" data-live-search="true" data-actions-box="true" title="@SharedLocalizer["Select branch"]" required disabled></select>
+                    </div>
+                </div>
+
+            </div>
+            @*/////////*@
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Date from"]</label>
+                        <div class="input-group-icon">
+                            <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                            <input asp-for="DateFrom" id="SearchDateFrom" class="form-control input-mask" data-mask="00/00/0000" value="@DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="control-label">@SharedLocalizer["Date to"]</label>
+                        <div class="input-group-icon">
+                            <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                            <input asp-for="DateTo" id="SearchDateTo" class="form-control input-mask" data-mask="00/00/0000" value="@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-8 text-left">
+                    <div class="form-group">
+                        <div>
+                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#billpayments">
+                                @SharedLocalizer["Bill Payment"]
+                            </button>
+                            <button style="background-color:#777777; color:#fff" type="button" class="btn" data-toggle="modal" data-target="#Nobillpayments">
+                                @SharedLocalizer["No Bill Payment"]
+                            </button>                                                                                                                                             
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4 text-right">
+                    <div class="form-group">
+                        <div>
+                            <button type="reset" class="btn btn-default" data-toggle="tagsinput-clear" data-target="#form-search .tagsinput">@SharedLocalizer["Clear"]</button>
+                            <button type="button" class="btn btn-primary btn-search" id="search">@SharedLocalizer["Search"]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade " id="billpayments" tabindex="-1" role="dialog" aria-labelledby="billpaymentsTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            @*<form asp-controller="Reconcile" asp-action="Savefile" method="Post" enctype="multipart/form-data">*@
+                <div class="modal-header">
+                    <h5 class="modal-title" id="billpaymentsTitle">@SharedLocalizer["Bill Payment"]</h5>
+                    <hr />
+                </div>
+                <div class="modal-body">
+                    <input type="file" id="my_file" name="files">
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary" id="btnUpload">Confirm</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            @*</form>*@
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="Nobillpayments" tabindex="-1" role="dialog" aria-labelledby="NobillpaymentsCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="NobillpaymentsCenterTitle"> @SharedLocalizer["No Bill Payment"]</h5>
+                <hr />
+            </div>
+            <div class="modal-body">
+
+                <input type="file" id="my_filen" name="my_filen">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnUploadn">Confirm</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
