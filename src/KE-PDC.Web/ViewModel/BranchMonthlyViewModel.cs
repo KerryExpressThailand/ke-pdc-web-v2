@@ -8,6 +8,7 @@ namespace KE_PDC.ViewModel
         [Required]
         [Display(Name = "Branch")]
         public string BranchList { get; set; }
+
         public List<string> BranchIdList { get; set; }
 
         [Required]

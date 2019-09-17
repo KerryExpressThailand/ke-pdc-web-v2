@@ -92,6 +92,58 @@ namespace KE_PDC.Areas.Api.Controllers
             return Json(Response.Render());
         }
 
+
+        [HttpPost]
+        public async Task<ActionResult> _GetMonthlyCommission(BranchMonthlyViewModel Filter, String FileType, String Type)
+        {
+            Pagination pagination = new Pagination(HttpContext);
+
+            // Auth Data
+            var userData = User.Claims.SingleOrDefault(c => c.Type.Equals("User")).Value;
+            UserMapRole UserData = JsonConvert.DeserializeObject<UserMapRole>(userData);
+
+            if (Type == null)
+            {
+                Type = "";
+            }
+
+            DateTime monthYear = DateTime.ParseExact(Filter.MonthYear, "MM/yyyy", enUS);
+
+            string exec = $"sp_RPT300_FN_MonthlyExpenseSync '{UserData.Username}', '{monthYear.Month.ToString()}', '{monthYear.Year.ToString()}'";
+            _logger.LogInformation(exec);
+            await DB.Database.ExecuteSqlCommandAsync(exec);
+
+            exec = $"EXEC sp_PDC_Report_MonthlyCommissionSummary_Get '{UserData.Username}', '{Filter.BranchList}', '{monthYear.Month.ToString()}', '{monthYear.Year.ToString()}', { (Type.Equals("rt") ? "0" : "1") }, ''";
+            _logger.LogInformation(exec);
+            List<MonthlySummaryCommission> MonthlySummaryCommission = await DB.MonthlySummaryCommission.FromSql(exec).ToListAsync();
+
+            if (FileType != null)
+            {
+                if (FileType.Equals("excel"))
+                {
+                    return ExportExcelMonthlyCommission(Type, MonthlySummaryCommission, monthYear);
+                }
+            }
+
+            int totalCount = MonthlySummaryCommission.Count();
+
+            MonthlySummaryCommission = MonthlySummaryCommission.Skip(pagination.From()).Take(pagination.To()).ToList();
+
+            Response.Success = true;
+            Response.Result = MonthlySummaryCommission;
+            Response.ResultInfo = new
+            {
+                page = pagination.Page,
+                perPage = pagination.PerPage,
+                count = MonthlySummaryCommission.Count(),
+                totalCount = totalCount
+            };
+
+            DB.Dispose();
+
+            return Json(Response.Render());
+        }
+
         private ActionResult ExportExcelMonthlyCommission(string type, List<MonthlySummaryCommission> List, DateTime MonthYear)
         {
             // Load the Excel Template
