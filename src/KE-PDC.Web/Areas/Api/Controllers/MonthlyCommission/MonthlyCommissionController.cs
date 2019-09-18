@@ -92,9 +92,9 @@ namespace KE_PDC.Areas.Api.Controllers
             return Json(Response.Render());
         }
 
-
         [HttpPost]
-        public async Task<ActionResult> _GetMonthlyCommission(BranchMonthlyViewModel Filter, String FileType, String Type)
+        //[Route ("GetMonthlyCommission")]
+        public async Task<ActionResult> GetMonthlyCommission(BranchMonthlyViewModel Filter, String FileType, String Type)
         {
             Pagination pagination = new Pagination(HttpContext);
 

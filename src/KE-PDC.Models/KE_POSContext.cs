@@ -70,6 +70,7 @@ namespace KE_PDC.Models
         public virtual DbSet<MDEConsignments> MDEConsignments { get; set; }
         public virtual DbSet<MDEPackages> MDEPackages { get; set; }
         public virtual DbSet<BranchList_r> BranchList_r { get; set; }
+        public virtual DbSet<Discount> Discount { get; set; }
         public virtual DbSet<SevicePointDailyRevenue> SevicePointDailyRevenue { get; set; }
         public virtual DbSet<Insurance> Insurance { get; set; }
 

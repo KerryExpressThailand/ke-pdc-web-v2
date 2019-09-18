@@ -573,14 +573,58 @@ namespace KE_PDC.Web.Controllers
 
                     }
 
+                  
                     List<LineOfBillPayModel> _items = new List<LineOfBillPayModel>();
+
                     //BillPayModel bp = new BillPayModel();
                     int startRow = 6;
+                    List<HeaderBillPayModel> header = new List<HeaderBillPayModel>();
+                    for (int i = startRow; i < 7; i++)
+                    {
+                        IRow row = sheet.GetRow(i);
+                        if (row == null) continue;
+                        if (row.Cells.Count != cellCount) continue;
+                        if (row.Cells.All(d => d.CellType == CellType.Blank)) continue;
 
+                        ICell _a = row.GetCell(0, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                        ICell _b = row.GetCell(1, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                        ICell _c = row.GetCell(2, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                        ICell _d = row.GetCell(3, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                        ICell _e = row.GetCell(4, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                        ICell _f = row.GetCell(5, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                        ICell _g = row.GetCell(6, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                        ICell _h = row.GetCell(7, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                        ICell _i = row.GetCell(8, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                        ICell _j = row.GetCell(9, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                        ICell _k = row.GetCell(10, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                        ICell _l = row.GetCell(11, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+
+                        HeaderBillPayModel _line = new HeaderBillPayModel
+                        {
+                            A = _a.ToString(),
+                            B = _b.ToString(),
+                            C = _c.ToString(),
+                            D = _d.ToString(),
+                            E = _e.ToString(),
+                            F = _f.ToString(),
+                            G = _g.ToString(),
+                            H = _h.ToString(),
+                            I = _i.ToString(),
+                            J = _j.ToString(),
+                            K = _k.ToString(),
+                            L = _l.ToString()
+                        };
+
+                        // add line model to list of bill payment model object
+                        header.Add(_line);
+                    }
                     for (int i = startRow; i <= sheet.LastRowNum; i++) //Read Excel File
                     {
                         IRow row = sheet.GetRow(i);
-                        if (row == null) break;
+                        if (row == null) continue;
+                        string cellA = row.GetCell(0, MissingCellPolicy.CREATE_NULL_AS_BLANK).ToString();
+                        if (cellA.Equals("No.")) continue;
+                        if (row.Cells.Count != cellCount ) continue;
                         if (row.Cells.All(d => d.CellType == CellType.Blank)) continue;
 
                         ICell _a = row.GetCell(0, MissingCellPolicy.CREATE_NULL_AS_BLANK);
@@ -625,18 +669,18 @@ namespace KE_PDC.Web.Controllers
                     {
                         // check data format for realtime (report type) file.
                         if (
-                            _util.IsEmpty(_items.First().A).Trim().ToUpper().Equals("NO.") &&
-                            _util.IsEmpty(_items.First().B).Trim().ToUpper().Equals("PAY.TIME") &&
-                            _util.IsEmpty(_items.First().C).Trim().ToUpper().Equals("CUSTOMER NO.") &&
-                            _util.IsEmpty(_items.First().D).Trim().ToUpper().Equals("CUSTOMER NAME") &&
-                            _util.IsEmpty(_items.First().E).Trim().ToUpper().Equals("PAY.DATE") &&
-                            _util.IsEmpty(_items.First().F).Trim().ToUpper().Equals("REFERENCE NO.") &&
-                            _util.IsEmpty(_items.First().G).Trim().ToUpper().Equals("FR BR.") &&
-                            _util.IsEmpty(_items.First().H).Trim().ToUpper().Equals("AMOUNT") &&
-                            _util.IsEmpty(_items.First().I).Trim().ToUpper().Equals("BY") &&
-                            _util.IsEmpty(_items.First().J).Trim().ToUpper().Equals("CHQ.NO.") &&
-                            _util.IsEmpty(_items.First().K).Trim().ToUpper().Equals("BC.") &&
-                            _util.IsEmpty(_items.First().L).Trim().ToUpper().Equals("RC.") 
+                            _util.IsEmpty(header.First().A).Trim().ToUpper().Equals("NO.") &&
+                            _util.IsEmpty(header.First().B).Trim().ToUpper().Equals("PAY.TIME") &&
+                            _util.IsEmpty(header.First().C).Trim().ToUpper().Equals("CUSTOMER NO.") &&
+                            _util.IsEmpty(header.First().D).Trim().ToUpper().Equals("CUSTOMER NAME") &&
+                            _util.IsEmpty(header.First().E).Trim().ToUpper().Equals("PAY.DATE") &&
+                            _util.IsEmpty(header.First().F).Trim().ToUpper().Equals("REFERENCE NO.") &&
+                            _util.IsEmpty(header.First().G).Trim().ToUpper().Equals("FR BR.") &&
+                            _util.IsEmpty(header.First().H).Trim().ToUpper().Equals("AMOUNT") &&
+                            _util.IsEmpty(header.First().I).Trim().ToUpper().Equals("BY") &&
+                            _util.IsEmpty(header.First().J).Trim().ToUpper().Equals("CHQ.NO.") &&
+                            _util.IsEmpty(header.First().K).Trim().ToUpper().Equals("BC.") &&
+                            _util.IsEmpty(header.First().L).Trim().ToUpper().Equals("RC.") 
                            )
                         {
                         
@@ -680,7 +724,7 @@ namespace KE_PDC.Web.Controllers
 
                 CheckRecode _line = new CheckRecode
                 {
-                    TotalRecord = _listOfRawData.Count - 1,
+                    TotalRecord = _listOfRawData.Count,
                     BatchId = addtran
                 };
                 string json = JsonConvert.SerializeObject(_line);
@@ -928,7 +972,7 @@ namespace KE_PDC.Web.Controllers
                         };
                         _itemsBillpay.Add(_line);
                     }
-                    if (i == 0) _itemsBillpay.RemoveAt(0);
+                    //if (i == 0) _itemsBillpay.RemoveAt(0);
 
                     string status = SaveBill(_itemsBillpay);
                     if (status != "1")

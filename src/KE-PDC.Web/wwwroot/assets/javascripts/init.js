@@ -206,7 +206,6 @@
         }
 
         var $BranchType = $('select[name="BranchType"]');
-
         $BranchType.prop("disabled", false).find('option[value="-1"]').remove();
 
         $.each(window.branchTypeList, function (key, value) {
@@ -228,7 +227,6 @@
 
         $BranchType.selectpicker('refresh');
     };
-
 
     var renderBranchList = function (result) {
         var $BranchList = $('select[name="BranchList"]');
@@ -331,6 +329,7 @@
         //}, 500);
         $.get(endpoint + "Branch/Type", function (response) {
             if (response.success) {
+                console.log(response.result);
                 window.branchTypeList = response.result;
                 renderBranchType();
             }
@@ -361,6 +360,48 @@
             $("body").removeClass("ajax-loading");
         });
     }
+
+    $.get(endpoint + "Branch/Discount", function (response) {
+        if (response.success) {
+            console.log(response.data);
+
+            //getId DiscountSelection
+            var $DiscountType = $('select[name="DiscountType"]');
+
+            $(response.data).each(function (item, itemname) {
+                //    var $option = $("<option/>").attr("value", a.).text(a.);
+                //    $('[data-entry=item]').append($option);
+                $DiscountType.append('<option class="text-uppercase"value=' + itemname.key + '>' + itemname.value + '</option>');
+            });
+
+            $DiscountType.selectpicker('refresh');
+        }
+    }).fail(function (response) {
+        window.branchTypeList = false;
+
+        if (response.status === 0 || response.status === 500) {
+            if (response.status === 0) {
+                $("#error-status").find(".error-status-code").text("Oops!");
+                $("#error-status").find(".error-status-title").text("Cannot Connect To Server");
+                $("#error-status").find(".error-status-desc").text("This one's your fault, not ours. Check your settings and retry.");
+            }
+            else if (response.status === 500) {
+                $("#error-status").find(".error-status-code").text("500");
+                $("#error-status").find(".error-status-title").text("Something went wrong");
+                $("#error-status").find(".error-status-desc").text("Try that again, and if it still doesn't work, let us know");
+            }
+
+            $("#wrapper").hide();
+            $("#error-status").show();
+            $("body").addClass("error-page").css("overflow-y", "hidden");
+        }
+        else {
+            swal(response.status.toString(), response.statusText.toString(), "error");
+        }
+    }).always(function () {
+        $.pageLoader();
+        $("body").removeClass("ajax-loading");
+    });
 
     if ($('select[data-ke-action="fc-list"]').length > 0) {
         $('select[data-ke-action="fc-list"]').on("change", function () {
