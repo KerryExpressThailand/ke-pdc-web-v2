@@ -209,7 +209,10 @@
                                 $("#grid-search-results").data("export-params", request);
 
                                 return request;
+                            },ajaxSettings: {
+                                method: "POST"
                             },
+                            ajax: true,
                             sorting: false,
                             selection: true,
                             multiSelect: true,

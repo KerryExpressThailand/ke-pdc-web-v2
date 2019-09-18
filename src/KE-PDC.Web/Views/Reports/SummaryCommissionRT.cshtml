@@ -104,7 +104,6 @@
                     if (searchFirstTime) {
 
                         searchFirstTime = false;
-                        alert(endpoint)
                         gridSearchResults = $("#grid-search-results").bootgrid({
                             url: endpoint + "MonthlyCommission",
                             requestHandler: function (request) {
@@ -113,6 +112,7 @@
                                         Type: "rt",
                                         BranchList: typeof BranchList == "object" ? BranchList.join(",") : BranchList,
                                         MonthYear: $form.find('input[name="MonthYear"]').val(),
+                                        BranchIdList: BranchList,
 
                                         // Pagination
                                         page: request.current,
@@ -121,12 +121,14 @@
                                         direction: request.sort[Object.keys(request.sort)[0]],
                                         searchPhrase: request.searchPhrase,
                                     };
-
                                 $("#modalUpdatePR").find('[name="MonthYear"]').val($form.find('input[name="MonthYear"]').val());
                                 $("#grid-search-results").data("export-params", request);
 
                                 return request;
+                            }, ajaxSettings: {
+                                method: "POST"
                             },
+                            ajax: true,
                             sorting: false,
                             selection: true,
                             multiSelect: true,

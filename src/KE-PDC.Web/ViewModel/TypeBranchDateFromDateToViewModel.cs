@@ -26,5 +26,10 @@ namespace KE_PDC.ViewModel
         [Display(Name = "Region")]
         public string Region { get; set; }
 
+        [Display(Name = "Discount Type")]
+        public string DiscountType { get; set; }
+
     }
+
+
 }

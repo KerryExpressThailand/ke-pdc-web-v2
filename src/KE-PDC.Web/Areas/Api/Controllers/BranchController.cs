@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -130,6 +132,54 @@ namespace KE_PDC.Areas.Api.Controllers
                 DB.Dispose();
 
                 return Response.Render();
+            }
+            catch (Exception ex)
+            {
+                string mss = ex.Message.ToString();
+                return Response.Render();
+            }
+
+        }
+
+
+        public object Discount()
+        {
+            try
+            {
+                // Auth Data
+                var userData = User.Claims.SingleOrDefault(c => c.Type.Equals("User")).Value;
+                UserMapRole UserData = JsonConvert.DeserializeObject<UserMapRole>(userData);
+
+                SqlParameter jsonInput = new SqlParameter()
+                {
+                    ParameterName = "@jsonreq",
+                    SqlDbType = SqlDbType.NVarChar,
+                    SqlValue = "",
+                    Size = int.MaxValue
+
+                };
+
+                SqlParameter jsonOutput = new SqlParameter()
+                {
+                    ParameterName = "@jsonOutput",
+                    SqlDbType = SqlDbType.NVarChar,
+                    Direction = ParameterDirection.Output,
+                    Size = int.MaxValue
+                };
+
+                var data = DB.Database.ExecuteSqlCommand(" sp_PDC_Get_Master_Discount @jsonreq, @jsonOutput OUTPUT ", jsonInput, jsonOutput);
+                ResultDiscount _Discount = JsonConvert.DeserializeObject<ResultDiscount> (jsonOutput.Value.ToString());
+
+                Response.Success = true;
+                //var data = await DB.BranchList.FromSql("EXEC sp_PDC_Branch_Get '" + UserData.Username + "', '" + type + "'" + "', '" + "'").ToListAsync();
+                //Response.Result = Discount;
+                //DB.Dispose();
+
+                //return Response.Render();
+
+                var model = _Discount.Result.Select(c => new KeyValuePair<string, Object>(c.Discount_Code, c.Discount_Description)).ToList();
+
+                return Json(new { success = true, data = model });
             }
             catch (Exception ex)
             {

@@ -42,6 +42,7 @@ namespace KE_PDC.Areas.Api.Controllers
         }
 
         // GET Api/<controller>
+        [HttpPost]
         [Route("Get")]
         public async Task<ActionResult> Get(BranchMonthlyViewModel Filter, String FileType)
         {
@@ -70,8 +71,7 @@ namespace KE_PDC.Areas.Api.Controllers
 
             exec = $"EXEC sp_RPT310_GetMonthlyExpense '{UserData.Username}', '{Filter.BranchList}', '{monthYear.Month.ToString()}', '{monthYear.Year.ToString()}', '{VerifyID}'";
             _logger.LogInformation(exec);
-            List<MonthlyExpense> MonthlyExpense = await DB.MonthlyExpense
-                .FromSql(exec).ToListAsync();
+            List<MonthlyExpense> MonthlyExpense = await DB.MonthlyExpense.FromSql(exec).ToListAsync();
 
             if(FileType != null)
             {

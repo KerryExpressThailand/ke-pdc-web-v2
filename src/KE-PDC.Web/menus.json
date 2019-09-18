@@ -246,6 +246,15 @@
           "Children": [ [] ]
         },
         {
+          "Id": "F0421",
+          "Controller": "Reports",
+          "Action": "DiscountReport",
+          "Url": null,
+          "LinkText": "Discount Report",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
           "Id": "d695cc75-4640-40de-978a-6c726da53b16",
           "Controller": "Reports",
           "Action": "Insurance",

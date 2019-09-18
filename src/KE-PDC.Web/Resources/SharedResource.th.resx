@@ -249,4 +249,10 @@
   <data name="Variance" xml:space="preserve">
     <value>ว</value>
   </data>
+  <data name="Discount Type" xml:space="preserve">
+    <value>ประเภทส่วนลด</value>
+  </data>
+  <data name="Select Discount" xml:space="preserve">
+    <value>เลือกประเภทของส่วนลด</value>
+  </data>
 </root>

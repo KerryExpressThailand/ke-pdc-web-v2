@@ -164,6 +164,10 @@ namespace KE_PDC.Controllers
         {
             return await Report(1222, View(), "BranchListWithERP");
         }
+        public async Task<IActionResult> DiscountReport()
+        {
+            return await Report(1223, View());
+        }
         #endregion
 
         // GET: /<controller>/Insurance
