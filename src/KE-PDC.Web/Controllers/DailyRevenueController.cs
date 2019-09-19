@@ -574,7 +574,7 @@ namespace KE_PDC.Web.Controllers
                     }
 
                   
-                    List<LineOfBillPayModel> _items = new List<LineOfBillPayModel>();
+                    List<LineOfBillPayModel> _items  = new List<LineOfBillPayModel>();
 
                     //BillPayModel bp = new BillPayModel();
                     int startRow = 6;
