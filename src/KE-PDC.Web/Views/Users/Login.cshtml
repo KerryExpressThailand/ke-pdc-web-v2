@@ -146,7 +146,7 @@
                             <div class="form-group@(ViewData.ModelState.GetFieldValidationState("Option") == InvalidState ? " has-error  has-feedback":"" )">
                                 <select class="form-control" asp-for="option" style="margin-bottom:10PX">
                                     <option value="ssgn">Single Sign-on</option>
-                                    <option value="pdc">PDC</option>
+                                    @*<option value="pdc">PDC</option>*@
 
                                 </select>
                                 @if (ViewData.ModelState.GetFieldValidationState("Option") == InvalidState)
