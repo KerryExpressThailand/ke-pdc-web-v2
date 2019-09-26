@@ -247,12 +247,36 @@
     <value>เช็คปิดร้าน</value>
   </data>
   <data name="Variance" xml:space="preserve">
-    <value>ว</value>
+    <value>ยอดต่าง</value>
   </data>
   <data name="Discount Type" xml:space="preserve">
     <value>ประเภทส่วนลด</value>
   </data>
   <data name="Select Discount" xml:space="preserve">
     <value>เลือกประเภทของส่วนลด</value>
+  </data>
+  <data name="Discount Amount" xml:space="preserve">
+    <value>จำนวนส่วนลด</value>
+  </data>
+  <data name="Discount Code" xml:space="preserve">
+    <value>รหัสส่วนลด</value>
+  </data>
+  <data name="Member Id" xml:space="preserve">
+    <value>รหัสสมาชิก</value>
+  </data>
+  <data name="Receipt Date" xml:space="preserve">
+    <value>วันที่ออกใบเสร็จ</value>
+  </data>
+  <data name="Receipt No" xml:space="preserve">
+    <value>รหัสใบเสร็จ</value>
+  </data>
+  <data name="Sender Mobile" xml:space="preserve">
+    <value>เบอร์โทรศัพท์ผุ้ส่ง</value>
+  </data>
+  <data name="Sender Name" xml:space="preserve">
+    <value>ชื่อผู้ส่ง</value>
+  </data>
+  <data name="Surcharge" xml:space="preserve">
+    <value>ยอดเพิ่มเติม</value>
   </data>
 </root>

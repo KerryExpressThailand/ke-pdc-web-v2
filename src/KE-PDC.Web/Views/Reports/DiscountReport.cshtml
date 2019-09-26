@@ -50,54 +50,29 @@
                 $("select").selectpicker('render');
             });
 
+            @*$('#search').on('click', function () {
+                var BranchIdList = $('select[name="BranchList"]').val();
+                var DiscountTypeList =  $('select[name="DiscountType"]').val();
+                var DateFrom =  $('input[name="DateFrom"]').val();
+                var DateTo = $('input[name="DateTo"]').val() || "@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))";
+                $.ajax({
+                    type: "POST",
+                    url: endpoint + "Discount",
+                    data: JSON.stringify({ BranchIdList: BranchIdList, DateFrom: DateFrom, DateTo: DateTo, DiscountTypeList: DiscountTypeList }),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    processData: false,
+                    success: function (response) {
+                        console.log(response)
+                        console.log(response.data["result"])
+                    },
+                    error: function (e) {
+                        swal("Oops!", "Can't Upload Excel", "error")
+                        return false;
+                    }
 
-
-            $('[data-command="confirm-select"]').on("click", function (e) {
-                e.preventDefault();
-                var checked = $("#grid-search-results tbody input:checked"),
-                    idList = [];
-
-                for (var i = 0; i < checked.length; i++) {
-                    idList.push(checked.eq(i).val());
-                }
-
-                if (idList.length == 0) {
-                    swal("Confirm Select", "Please select the information to be updated!", "warning")
-                }
-                else {
-                    swal({
-                        title: "Are you sure?",
-                        text: "Confirm this select to be recorded",
-                        type: "warning",
-                        showCancelButton: true,
-                        confirmButtonClass: "btn-outline-primary",
-                        confirmButtonText: "Yes, Confirm it!",
-                        closeOnConfirm: false
-                    }, function () {
-                        $.post(endpoint + "DailyRevenueXXXXXXXXXXXXXX", {
-                            IDs: idList.join(),
-                        }, function (response) {
-                            if (response.success) {
-                                $.each(idList, function (index, value) {
-                                    $('#grid-search-results tr[data-row-id="' + value + '"]')
-                                        .addClass("bg-m-gray bg-m-lighten-3 text-m-gray").removeClass("active")
-                                        .find(".select-box").prop("disabled", true).prop("checked", false).removeClass("select-box").addClass("select-box-disabled")
-                                        .end().find('[data-command="edit"]').prop("disabled", true).removeClass("btn-outline-warning").addClass("btn-default")
-                                        .end().find('td [data-id="comfirm-status"]').html('<div data-id="comfirm-status" class="text-success"><i class="ion-checkmark-round"></i> Comfirmed</div>');
-                                });
-
-                                swal("Confirmed", response.messages[0], "success");
-                            }
-                            else {
-                                var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
-                                swal("Error", message, "error");
-                                return false;
-                            }
-                        });
-                    });
-                }
-            });
-
+                });
+            });*@
             $("#form-search").validate({
                 submitHandler: function (form) {
                     $.pageLoader("show");
@@ -110,12 +85,14 @@
                             ajaxSettings: {
                                 method: "POST",
                             },
-                            url: endpoint + "DailyRevenueVerify/Get",
+                            url: endpoint + "Discount",
                             requestHandler: function (request) {
                                 var BranchList = $form.find('select[name="BranchList"]').val(),
                                     request = {
                                         BranchType: $form.find('select[name="BranchType"]').val(),
                                         BranchList: typeof BranchList == "object" ? BranchList.join(",") : BranchList,
+                                        BranchIdList: $form.find('select[name="BranchList"]').val(),
+                                        DiscountTypeList: $form.find('select[name="DiscountType"]').val(),
                                         DateFrom: $form.find('input[name="DateFrom"]').val(),
                                         DateTo: $form.find('input[name="DateTo"]').val() || "@DateTime.Now.ToString("dd/MM/yyyy", new CultureInfo("en-US"))",
 
@@ -132,189 +109,28 @@
                                 return request;
                             },
                             sorting: false,
-                            // selection: true,
-                            // multiSelect: true,
+                            selection: true,
+                            multiSelect: true,
                             templates: {
                                 header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static"><button class="btn btn-primary sr-only" data-command="confirm-select">Confirm Select</button></h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20">@if (ViewData["Action"].Equals("") || true) { <buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-search-results">@SharedLocalizer["Export (Excel)"]</buttom>}@if (ViewData["Action"].Equals("linetopupremittance")) { <buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="pdf" data-ke-target="#grid-search-results"><i class="ion-document-text"></i> @SharedLocalizer["Export (PDF)"]</buttom>}</div></div></div></div>',
                             },
                             formatters: {
-                                commands: function (column, row) {
-                                    return '<button class="btn btn-sm btn-primary" data-command="verify" data-row-id="' + row.id + '" data-row-branch="' + row.branchID + '" data-row-report-date="' + row.reportDate + '"><i class="ion-checkmark-round"></i> Verify</button>';
-                                },
-                                captured: function (column, row) {
-                                    return row[column.id] ? "Yes" : "No";
-                                },
-                                status: function (column, row) {
-                                    var status = row.verifyFreight && row.verifyCOD && row.verifyInsurance && row.verifyPackage && row.verifySalePackage && row.verifyLineTopUp && row.verifyDiscount && row.verifyShipments && row.verifyBoxes && row.verifyDropoffBoxes && row.verifyCash && row.verifyRabbit && row.verifyCreditBBL && row.verifyCreditSCB && row.verifyQRPayment && row.verifyLinePay && row.verifyTransportation && row.verifyVASSurcharge && row.verifyVat
-                                    return '<input type="text" name="status" value="' + status + '" style="display: none;">' +
-                                        (status
-                                        ? '<div class="text-success"><i class="ion-checkmark-round"></i> Pass</div>'
-                                        : '<div class="text-danger">Incorrect</div>');
+                                erpid: function (column, row) {
+                                    var chkerp = row.erpid == null ? '-' : row.erpid
+                                    console.log(row.erpid + row.branchId + "discountAmount:  " + row.discountAmount)
+                                    return chkerp
                                 }
                             }
-                        })
-                        .on("loaded.rs.jquery.bootgrid", function () {
+                        }).on("loaded.rs.jquery.bootgrid", function () {
                             $.pageLoader("hide");
 
-
-                            gridSearchResults.find('[name="status"][value="false"]').parents("tr")
-                                .addClass("text-m-red")
-                                .find(".select-box").prop("disabled", true).removeClass("select-box").addClass("select-box-disabled");
-
                             gridSearchResults
-                            .find('[data-command="view"], [data-command="verify"], [data-command="edit"]').on("click", function () {
-                                var that = this,
-                                    id = $(this).data("row-id"),
-                                    branch = $(this).data("row-branch"),
-                                    reportDate = $(this).data("row-report-date"),
-                                    command = $(this).data("command");
-
-                                $.pageLoader("show");
-
-                                $("#form-detail").data("row-id", id);
-
-                                $.get(endpoint + "DailyRevenueDetail/" + branch, {
-                                    ReportDate: reportDate,
-                                }, function (response) {
-                                    var result = response.result;
-                                    console.log(result);
-                                    if (response.success) {
-                                        $.each(result, function (key, value) {
-                                            var $e = $("#form-detail").find('[data-column-id="' + key + '"]'),
-                                                type = $e.data("type"),
-                                                textValue = "-";
-                                            switch (type) {
-                                                case "numeric":
-                                                    textValue = value.toLocaleString();
-                                                    break;
-                                                case "decimal":
-                                                    textValue = (Math.round(value * 100) / 100).toLocaleString(undefined, fractionDigits);
-                                                    break;
-                                                case "date":
-                                                    textValue = value == null ? "-" : moment(value).format("DD/MM/YYYY");
-                                                    break;
-                                            }
-
-                                            $e.text(textValue);
-                                        });
-
-
-                                        var totalService = (result.freight + result.cod + result.insur + result.package + result.salePackage + result.lineTopUp) - result.discount,
-                                            totalPayment = result.cash + result.rabbit + result.credit + result.linePay + result.qrPay,
-                                            totalSurcharge = (result.transportation + result.vasSurcharge + result.vat) - result.discount,
-                                            bsdTotalAccout = (result.bsdSurcharge) - result.discountBSD,
-                                            bsdTotalPayment = result.bsdCash + result.bsdLinePay,
-                                            bsdTotalPaymentCash = result.bsdCash + result.bsdLineTopUp;
-
-                                        totalService = Math.round(totalService * 100) / 100;
-                                        totalPayment = Math.round(totalPayment * 100) / 100;
-                                        totalSurcharge = Math.round(totalSurcharge * 100) / 100;
-
-                                        var totalNetTransfer = result.totalTransfer + (result.bonusCommission + result.adjOther + result.returnCharge + result.suspense + result.withHoldingTax + result.promotion + result.bankCharge + result.adjCreditCard + result.adjLinePay + result.project);
-                                        var status = true
-                                        $('#modal-confirm').find('[type="submit"]').prop("disabled", false);
-                                        $('#modal-confirm').find('[data-column-id]').removeClass('text-danger');
-
-                                        $.each(result, function (k, v) {
-                                            if (k === 'verifyDate' || !k.startsWith('verify') || v === true) return
-                                            status = false
-                                            $('#modal-confirm').find('[data-verify="' + k + '"]').addClass('text-danger');
-                                        })
-
-                                        console.log(totalSurcharge)
-                                        console.log(totalService)
-                                        console.log(totalPayment)
-
-                                        if (totalSurcharge !== totalService || totalSurcharge !== totalPayment) {
-                                            $('#modal-confirm').find('[data-column-id="totalService"],[data-column-id="totalPayment"],[data-column-id="totalSurcharge"]').addClass('text-danger');
-                                        }
-                                        if (status === false || totalSurcharge !== totalService || totalSurcharge !== totalPayment) {
-                                            $('#modal-confirm').find('[type="submit"]').prop("disabled", true);
-                                        }
-
-                                        $("#form-detail")
-                                        .find('[data-column-id="totalTransfer"]').data('val', result.totalTransfer).text(result.totalTransfer.toLocaleString(undefined, fractionDigits))
-                                        .end().find('[data-column-id="totalNetTransfer"]').text(totalNetTransfer.toLocaleString(undefined, fractionDigits))
-                                        .end().find('[data-column-id="totalService"]').text(totalService.toLocaleString(undefined, fractionDigits))
-                                        .end().find('[data-column-id="totalPayment"]').text(totalPayment.toLocaleString(undefined, fractionDigits))
-                                        .end().find('[data-column-id="totalSurcharge"]').text(totalSurcharge.toLocaleString(undefined, fractionDigits))
-                                        .end().find('[data-column-id="bsdTotalAccout"]').text(bsdTotalAccout.toLocaleString(undefined, fractionDigits))
-                                        .end().find('[data-column-id="bsdTotalPayment"]').text(bsdTotalPayment.toLocaleString(undefined, fractionDigits))
-                                        .end().find('[data-column-id="bsdTotalPaymentCash"]').text(bsdTotalPaymentCash.toLocaleString(undefined, fractionDigits));
-
-                                        $('#modal-confirm')
-                                        .find(".maskmoney").val("")
-                                        .end().find('[data-column-id="erP_ID"]').text(result.erP_ID || 'N\A')
-                                        .end().find('[data-column-id="branchID"]').text(branch)
-                                        .end().find('[data-column-id="reportDate"]').text(moment(reportDate).format("DD/MM/YYYY"))
-                                        .end().find(".maskmoney").val("0.00")
-                                        .end().find('input[name="Branch"]').val(branch)
-                                        .end().find('input[name="ReportDate"]').val(reportDate)
-
-                                        .end().find('input[name="Comm"]').val(result.bonusCommission)
-                                        .end().find('input[name="adjCreditCard"]').val(result.adjCreditCard)
-                                        .end().find('input[name="Other"]').val(result.adjOther)
-                                        .end().find('input[name="Return"]').val(result.returnCharge)
-                                        .end().find('input[name="Suspensse"]').val(result.suspense)
-                                        .end().find('input[name="WithHoldingTax"]').val(result.withHoldingTax)
-                                        .end().find('input[name="Promotion"]').val(result.promotion)
-                                        .end().find('input[name="bankCharge"]').val(result.bankCharge)
-                                        .end().find('input[name="adjLinePay"]').val(result.adjLinePay)
-                                        //add by kathawutpa 17/7/2019 for project sales x
-                                        .end().find('input[name="Project"]').val(result.project)
-
-                                        .end().find('input[name="CommRemark"]').val(result.bonusCommissionRemark)
-                                        .end().find('input[name="adjCreditCardRemark"]').val(result.adjCreditCardRemark)
-                                        .end().find('input[name="OtherRemark"]').val(result.adjOtherRemark)
-                                        .end().find('input[name="ReturnRemark"]').val(result.returnChargeRemark)
-                                        .end().find('input[name="SuspensseRemark"]').val(result.suspenseRemark)
-                                        .end().find('input[name="WithHoldingTaxRemark"]').val(result.withHoldingTaxRemark)
-                                        .end().find('input[name="PromotionRemark"]').val(result.promotionRemark)
-                                        .end().find('input[name="BankChargeRemark"]').val(result.bankChargeRemark)
-                                        .end().find('input[name="adjLinePayRemark"]').val(result.adjLinePayRemark)
-                                        //add by kathawutpa 17/7/2019 for project sales x
-                                        .end().find('input[name="ProjectRemark"]').val(result.projectRemark)
-
-                                        .end().find('[data-column-id="CheckReconcile"]').text(result.checkReconcile)
-
-                                        .end().find('input').prop("disabled", (command == "view"))
-                                        .end().find('button[type="submit"]').css("display", function () {
-                                            return command == "view" ? "none" : "inline-block";
-                                        })
-                                        .end().find('#VerifyDate').data('min-date', moment(reportDate))
-                                            .end().modal("show");
-
-
-
-                                        $.pageLoader("hide");
-
-                                        if (result.checkReconcile === 0) {
-                                            $("#check-cross").show();
-                                            $("#check-check").hide();
-                                            $("#check-minus").hide();
-                                        } else if (result.checkReconcile === 1) {
-                                            $("#check-cross").hide();
-                                            $("#check-check").show();
-                                            $("#check-minus").hide();
-                                        } else {
-                                            $("#check-cross").hide();
-                                            $("#check-check").hide();
-                                            $("#check-minus").show();
-                                        }
-                                    }
-                                    else {
-                                        var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;
-                                        swal("Error", message, "error");
-                                        return false;
-                                    }
-                                });
-                            }).end()
                             .find('[data-toggle="tooltip"]').tooltip({
                                 container: "body",
                             }).end();
                         });
-
-                        $("#card-search-results, #card-search-status").delay(500).fadeIn(300);
+                        
+                        $("#card-search-results").delay(500).fadeIn(300);
                     }
                     else {
                         gridSearchResults.bootgrid("reload");
@@ -453,26 +269,18 @@
             <table id="grid-search-results" class="table table-card table-bordered table-condensed table-hover unordered">
                 <thead>
                     <tr>
-                        <th data-column-id="id" data-identifier="true" data-visible="false" data-visible-in-selection="false"></th>
-                        <th data-column-id="erP_ID" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["ERP ID"]</th>
-                        <th data-column-id="branchID" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["Branch"]</th>
-                        <th data-column-id="verify" data-formatter="commands" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="center" data-width="auto;white-space: nowrap !important">@Localizer["Commands"]</th>
-                        <th data-column-id="status" data-formatter="status" data-css-class="text-center" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@Localizer["Status"]</th>
-                        <th data-column-id="reportDate" data-type="date" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="center" data-css-class="text-center">@SharedLocalizer["Report date"]</th>
-                        <th data-column-id="freight" data-type="decimal" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="right" data-css-class="text-right">@Localizer["Freight"]</th>
-                        <th data-column-id="cod" data-type="decimal" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="right" data-css-class="text-right">@Localizer["COD"]</th>
-                        <th data-column-id="insur" data-type="decimal" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="right" data-css-class="text-right">@Localizer["INSUR"]</th>
-                        <th data-column-id="pkg" data-type="decimal" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="right" data-css-class="text-right">@Localizer["PKG"]</th>
-                        <th data-column-id="lineTopUp" data-type="decimal" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="right" data-css-class="text-right">@Localizer["TopUp"]</th>
-                        <th data-column-id="cash" data-type="decimal" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="right" data-css-class="text-right">@Localizer["Cash"]</th>
-                        <th data-column-id="rabbit" data-type="decimal" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="right" data-css-class="text-right">@Localizer["Rabbit"]</th>
-                        <th data-column-id="creditBBL" data-type="decimal" data-header-css-class="bg-m-indigo bg-m-lighten-4" data-header-align="right" data-css-class="text-right bg-m-indigo bg-m-lighten-5">@Localizer["Card (BBL)"]</th>
-                        <th data-column-id="creditSCB" data-type="decimal" data-header-css-class="bg-m-purple bg-m-lighten-4" data-header-align="right" data-css-class="text-right bg-m-purple bg-m-lighten-5">@Localizer["Card (SCB)"]</th>
-                        <th data-column-id="qrPay" data-type="decimal" data-header-css-class="bg-m-gray bg-m-lighten-4" data-header-align="right" data-css-class="text-right bg-m-gray bg-m-lighten-5">@Localizer["QR Payment"]</th>
-                        <th data-column-id="linePay" data-type="decimal" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="right" data-css-class="text-right">@Localizer["LinePay"]</th>
-                        <th data-column-id="total" data-type="decimal" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="right" data-css-class="text-right">@SharedLocalizer["Total"]</th>
-                        <th data-column-id="bsdSurcharge" data-type="decimal" data-header-css-class="bg-m-amber bg-m-lighten-5" data-header-align="right" data-css-class="text-right">@Localizer["BSD"]</th>
-                        @*<th data-column-id="captured" data-formatter="captured">@SharedLocalizer["Captured"]</th>*@
+                        <th data-column-id="erpid" data-formatter="erpid" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["ERP ID"]</th>
+                        <th data-column-id="branchId" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["Branch"]</th>
+                        <th data-column-id="branchType" data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Branch type"]</th>
+                        <th data-column-id="discountAmount" data-type="decimal"data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Discount Amount"]</th>
+                        <th data-column-id="discountCode" data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Discount Code"]</th>
+                        <th data-column-id="discountType" data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Discount Type"]</th>
+                        <th data-column-id="receiptNo" data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Receipt No"]</th>
+                        <th data-column-id="receiptDate" data-type="date" data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Receipt Date"]</th>
+                        <th data-column-id="senderMobile" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Sender Mobile"]</th>
+                        <th data-column-id="senderName" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Sender Name"]</th>
+                        <th data-column-id="surcharge" data-type="decimal"data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Surcharge"]</th>
+            
                     </tr>
                 </thead>
             </table>

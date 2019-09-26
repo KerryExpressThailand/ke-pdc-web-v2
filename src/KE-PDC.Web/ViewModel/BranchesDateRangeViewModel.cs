@@ -41,6 +41,12 @@ namespace KE_PDC.ViewModel
 
     }
 
+    public class DiscountTypeList
+    {
+        public string DiscountType { get; set; }
+
+    }
+
     public class BranchesBillDateRangeViewModel
     {
         public int Page { get; set; }
