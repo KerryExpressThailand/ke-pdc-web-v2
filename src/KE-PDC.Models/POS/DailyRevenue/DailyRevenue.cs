@@ -156,6 +156,8 @@ namespace KE_PDC.Models.POS
         public decimal CreditSCB { get; set; }
         public decimal QRPay { get; set; }
         public decimal LinePay { get; set; }
+        public decimal mPayService { get; set; } //new add
+        public decimal rabbitTopUp { get; set; } //new add
         public decimal Transportation { get; set; }
         public decimal VASSurcharge { get; set; }
         public decimal Discount { get; set; }
@@ -220,6 +222,8 @@ namespace KE_PDC.Models.POS
         public decimal Insur { get; set; }
         public decimal Pkg { get; set; }
         public decimal SalePackage { get; set; }
+        public decimal mPayService { get; set; } //new add
+        public decimal rabbitTopUp { get; set; } //new add
         public decimal LineTopUp { get; set; }
         public decimal Cash { get; set; }
         public decimal Rabbit { get; set; }
@@ -440,6 +444,8 @@ namespace KE_PDC.Models.POS
         public decimal Package { get; set; }
         public decimal SalePackage { get; set; }
         public decimal LineTopUp { get; set; }
+        public decimal mPayService { get; set; } //new add
+        public decimal rabbitTopUp { get; set; } //new add
         public decimal Cash { get; set; }
         public decimal Rabbit { get; set; }
         public decimal Credit { get; set; }

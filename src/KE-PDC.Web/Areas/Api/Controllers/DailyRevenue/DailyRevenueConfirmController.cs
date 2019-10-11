@@ -375,6 +375,8 @@ namespace KE_PDC.Areas.Api.Controllers
                 i.Pkg,
                 i.SalePackage,
                 i.LineTopUp,
+                i.mPayService,
+                i.rabbitTopUp,
                 i.Cash,
                 i.Rabbit,
                 i.CreditBBL,

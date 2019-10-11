@@ -269,18 +269,19 @@
             <table id="grid-search-results" class="table table-card table-bordered table-condensed table-hover unordered">
                 <thead>
                     <tr>
-                        <th data-column-id="erpid" data-formatter="erpid" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["ERP ID"]</th>
-                        <th data-column-id="branchId" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4">@SharedLocalizer["Branch"]</th>
-                        <th data-column-id="branchType" data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Branch type"]</th>
-                        <th data-column-id="discountAmount" data-type="decimal"data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Discount Amount"]</th>
-                        <th data-column-id="discountCode" data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Discount Code"]</th>
-                        <th data-column-id="discountType" data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Discount Type"]</th>
-                        <th data-column-id="receiptNo" data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Receipt No"]</th>
-                        <th data-column-id="receiptDate" data-type="date" data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Receipt Date"]</th>
-                        <th data-column-id="senderMobile" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Sender Mobile"]</th>
-                        <th data-column-id="senderName"  data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Sender Name"]</th>
-                        <th data-column-id="surcharge" data-type="decimal"data-header-align="center" data-css-class="text-center" data-header-css-class="bg-m-amber bg-m-lighten-5">@SharedLocalizer["Surcharge"]</th>
-            
+                        <th data-column-id="branchType" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4" nowrap>@SharedLocalizer["Branch type"]</th>
+                        <th data-column-id="erpid" data-formatter="erpid" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4" nowrap>@SharedLocalizer["ERP ID"]</th>
+                        <th data-column-id="branchId" data-css-class="bg-m-blue bg-m-lighten-5" data-header-css-class="bg-m-blue bg-m-lighten-4" nowrap>@SharedLocalizer["Branch"]</th>
+                        <th data-column-id="receiptNo" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@SharedLocalizer["Receipt No"]</th>
+                        <th data-column-id="receiptDate" data-type="date" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@SharedLocalizer["Receipt Date"]</th>
+                        <th data-column-id="senderName" data-css-class="text-nowrap" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@SharedLocalizer["Sender Name"]</th>
+                        @*<th data-column-id="senderMobile" data-css-class="text-center text-nowrap" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@SharedLocalizer["Sender Mobile"]</th>*@
+                        <th data-column-id="discountCode" data-css-class="text-center text-nowrap" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@SharedLocalizer["Discount Code"]</th>
+                        <th data-column-id="discountType" data-css-class="text-center text-nowrap" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@SharedLocalizer["Discount Type"]</th>
+                        <th data-column-id="surcharge" data-css-class="text-center text-nowrap" data-type="decimal" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" nowrap>@SharedLocalizer["Surcharge"]</th>
+                        <th data-column-id="discountAmount" data-type="decimal" data-css-class="text-center text-nowrap" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">@SharedLocalizer["Discount Amount"]</th>
+
+
                     </tr>
                 </thead>
             </table>

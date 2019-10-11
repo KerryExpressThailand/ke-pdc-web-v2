@@ -38,27 +38,36 @@ namespace KE_PDC.Areas.Api.Controllers
         [HttpGet("{id}")]
         public async Task<object> Detail(string id, DateTime ReportDate)
         {
-            // Auth Data
-            var userData = User.Claims.SingleOrDefault(c => c.Type.Equals("User")).Value;
-            UserMapRole UserData = JsonConvert.DeserializeObject<UserMapRole>(userData);
-
-            //DateTime dateStr = DateTime.ParseExact(ReportDate, "dd/MM/yyyy", enUS);
-            string exec = $"EXEC sp_PDC_Report_DailyRevenueVerifyMatchCash_Get '{UserData.Username}', '{id}', '{ReportDate.ToString("yyyyMMdd", enUS)}'";
-            //string exec1 = $"EXEC sp_PDC_Report_DailyRevenueVerifyMatchCash_Get  '{id}', '{ReportDate.ToString("yyyyMMdd", enUS)}'";
-            _logger.LogInformation(exec);           
-            
-            DailyRevenueDetailCash Detail = await DB.DailyRevenueDetailCash.FromSql(exec).FirstOrDefaultAsync();
-
-            if (Detail == null)
+            try
             {
-                return ResponseNotFound(id);
+                var userData = User.Claims.SingleOrDefault(c => c.Type.Equals("User")).Value;
+                UserMapRole UserData = JsonConvert.DeserializeObject<UserMapRole>(userData);
+                var date = ReportDate.ToString("yyyyMMdd", enUS);
+                //DateTime dateStr = DateTime.ParseExact(ReportDate, "dd/MM/yyyy", enUS);
+                string exec = $"EXEC sp_PDC_Report_DailyRevenueVerifyMatchCash_Get '{UserData.Username}', '{id}', '{ReportDate.ToString("yyyyMMdd", enUS)}'";
+                //string exec1 = $"EXEC sp_PDC_Report_DailyRevenueVerifyMatchCash_Get  '{id}', '{ReportDate.ToString("yyyyMMdd", enUS)}'";
+                _logger.LogInformation(exec);
+
+                DailyRevenueDetailCash Detail = await DB.DailyRevenueDetailCash.FromSql(exec).FirstOrDefaultAsync();
+
+                if (Detail == null)
+                {
+                    return ResponseNotFound(id);
+                }
+
+                Response.Success = true;
+                Response.Result = Detail;
+                DB.Dispose();
+
+                return Response.Render();
             }
-
-            Response.Success = true;
-            Response.Result = Detail;
-            DB.Dispose();
-
-            return Response.Render();
+            catch(Exception ex)
+            {
+                string mss = ex.Message.ToString();
+                return null;
+            }
+            // Auth Data
+           
         }
 
         private JsonResult ResponseNotFound(string BranchId)

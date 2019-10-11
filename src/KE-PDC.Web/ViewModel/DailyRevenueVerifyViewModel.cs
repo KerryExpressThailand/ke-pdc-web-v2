@@ -95,5 +95,11 @@ namespace KE_PDC.ViewModel
 
         [Display(Name = "Check Reconcile")]
         public string CheckReconcile { get; set; }
+
+        [Display(Name = "Check mPayService")]
+        public string mPayService { get; set; }
+
+        [Display(Name = "Rabbit Top-Up")]
+        public string rabbitTopUp { get; set; }
     }
 }

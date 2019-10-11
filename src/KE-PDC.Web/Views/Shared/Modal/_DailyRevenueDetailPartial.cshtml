@@ -56,7 +56,7 @@
                                         @* รายละเอียดแยกตามบริการ *@
                                         <div class="card">
                                             <div class="card-header p-t-10 p-l-5 p-b-10 p-r-5 card-header-inverse bg-m-orange bg-m-accent-4">
-                                                <h2 class="card-title">รายละเอียดแยกตามบริการ</h2>
+                                                <h2 class="card-title">รายละเอียดแยกตามบริการ</h2> 
                                             </div>
                                             <div class="card-body p-5 bg-m-gray bg-m-lighten-4">
                                                 <div class="row">
@@ -90,17 +90,35 @@
                                                     </div>
                                                 </div>
                                                 <div class="row">
+                                                    <label class="col-sm-6 text-right">Discount</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="discount" data-verify="verifyDiscount" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+                                                @*//*@
+                                                <div class="row">
+                                                    @*add new*@
+                                                    <label class="col-sm-12 text-right"><u>รายละเอียดแยกตามบริการการเติมเงิน</u></label>
+                                                </div>
+                                                <div class="row">
                                                     <label class="col-sm-6 text-right">LINEPay Top-Up</label>
                                                     <div class="col-sm-6">
                                                         <p class="text-right" data-column-id="lineTopUp" data-verify="verifyLineTopUp" data-type="decimal">-</p>
                                                     </div>
                                                 </div>
                                                 <div class="row">
-                                                    <label class="col-sm-6 text-right">Discount</label>
+                                                    <label class="col-sm-6 text-right">Rabbit Top-Up</label>
                                                     <div class="col-sm-6">
-                                                        <p class="text-right" data-column-id="discount" data-verify="verifyDiscount" data-type="decimal">-</p>
+                                                        <p class="text-right" data-column-id="rabbitTopUp" data-verify="rabbitTopUp" data-type="decimal">-</p>
                                                     </div>
                                                 </div>
+                                                <div class="row">
+                                                    <label class="col-sm-6 text-right">mPay Service</label>
+                                                    <div class="col-sm-6">
+                                                        <p class="text-right" data-column-id="mPayService" data-verify="mPayService" data-type="decimal">-</p>
+                                                    </div>
+                                                </div>
+
                                                 <hr />
                                                 <div class="row">
                                                     <label class="col-sm-6 text-right">Total</label>

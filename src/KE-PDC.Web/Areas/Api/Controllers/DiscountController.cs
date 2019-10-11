@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using KE_PDC.Areas.Api.ExternalServices.Utils;
 using KE_PDC.Models;
 using KE_PDC.Services;
 using KE_PDC.ViewModel;
@@ -174,86 +175,8 @@ namespace KE_PDC.Areas.Api.Controllers
 
         }
 
-
         private FileStreamResult ExportExcelDiscountReport(ReqDiscount ReqDiscount, DateTime dateTo, DateTime dateFrom)
         {
-            string[] BranchIdList = ReqDiscount.BranchIdList[0].Split(',');
-            string[] DiscountTypeList_ = ReqDiscount.DiscountTypeList[0].Split(',');
-            List<BranchIdList> _items = new List<BranchIdList>();
-            foreach (var branch in BranchIdList)
-            {
-                BranchIdList _b = new BranchIdList
-                {
-                    BranchId = branch.ToString()
-                };
-                _items.Add(_b);
-            }
-            List<DiscountTypeList> _Dis = new List<DiscountTypeList>();
-            foreach (var DiscountType in DiscountTypeList_)
-            {
-                DiscountTypeList _d = new DiscountTypeList
-                {
-                    DiscountType = DiscountType.ToString()
-                };
-                _Dis.Add(_d);
-            }
-
-            ReqDiscountType DiscountTypeList = new ReqDiscountType
-            {
-                DateFrom = dateFrom.ToString("yyyyMMdd"),
-                DateTo = dateTo.ToString("yyyyMMdd"),
-                BranchIdList = _items,
-                DiscountTypeList = _Dis
-            };
-
-            string json = JsonConvert.SerializeObject(DiscountTypeList);
-            SqlParameter jsonInput = new SqlParameter()
-            {
-                ParameterName = "@jsonreq",
-                SqlDbType = SqlDbType.NVarChar,
-                SqlValue = json,
-                Size = int.MaxValue
-
-            };
-
-            SqlParameter jsonOutput = new SqlParameter()
-            {
-                ParameterName = "@jsonOutput",
-                SqlDbType = SqlDbType.NVarChar,
-                Direction = ParameterDirection.Output,
-                Size = int.MaxValue
-            };
-
-
-
-            DB.Database.ExecuteSqlCommand(" sp_PDC_Discount_Report_Detail @jsonreq, @jsonOutput OUTPUT ", jsonInput, jsonOutput);
-            //JObject dd = JObject.Parse("[" + jsonOutput.Value.ToString() + "]");
-            ResResultDiscount Discount = JsonConvert.DeserializeObject<ResResultDiscount>(jsonOutput.Value.ToString());                
-
-
-            List<DiscountModel> queryableDiscount = new List<DiscountModel>();
-            foreach (var item in Discount.Result)
-            {
-                DiscountModel dc = new DiscountModel
-                {
-                    BranchType = item.BranchType,
-                    ERPID = item.ERPID,
-                    BranchId = item.BranchId,
-                    ReceiptNo = item.ReceiptNo,
-                    ReceiptDate = item.ReceiptDate,
-                    MemberId = item.MemberId,
-                    SenderName = item.SenderName,
-                    SenderMobile = item.SenderMobile,
-                    DiscountCode = item.DiscountCode,
-                    DiscountType = item.DiscountType,
-                    Surcharge = item.Surcharge,
-                    DiscountAmount = item.DiscountAmount
-
-                };
-                queryableDiscount.Add(dc);
-            }
-
-
             // Load the Excel Template
             Stream xlsxStreamDailyRevenueVerify = System.IO.File.OpenRead(_hostingEnvironment.WebRootPath + @"\assets\templates\DiscountReport.xlsx");
 
@@ -272,11 +195,11 @@ namespace KE_PDC.Areas.Api.Controllers
 
             _worksheetDiscount.Range["E2"].Text = $"{dateFrom.ToString("dd/MM/yyyy")} - {dateTo.ToString("dd/MM/yyyy")}";
 
-            _worksheetDiscount.ImportData(queryableDiscount.Select(i => new
+            _worksheetDiscount.ImportData(GlobalVal._listDiscount.Select(i => new
             {
-                i.BranchId,
                 i.BranchType,
                 i.ERPID,
+                i.BranchId,
                 i.ReceiptNo,
                 i.ReceiptDate,
                 i.MemberId,
@@ -311,6 +234,7 @@ namespace KE_PDC.Areas.Api.Controllers
 
             return File(ms, "Application/msexcel", "KE_PDC_Discount_Report_" + DateTime.Now.ToString("yyyMMdd_HHmmss") + ".xlsx");
         }
+       
     }
    
 }
