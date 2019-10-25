@@ -199,6 +199,10 @@ namespace KE_PDC.Areas.Api.Controllers
             {
                 DateTime dateRemittance = DateTime.ParseExact(Filter.DateRemittance, "dd/MM/yyyy", enUS);
 
+                string date = DateTime.Now.ToString("yyyyMMdd");
+
+
+
                 StringBuilder sqlStringBuilder = new StringBuilder();
                 sqlStringBuilder.Append("EXEC sp_RPT308_LINEPayRemittanceReport '");
                 //sqlStringBuilder.Append(dateFrom.ToString("yyyyMMdd", enUS));

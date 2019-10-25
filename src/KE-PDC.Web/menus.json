@@ -262,6 +262,24 @@
           "LinkText": "Insurance",
           "Icon": "",
           "Children": [ [] ]
+        },
+        {
+          "Id": "F0422",
+          "Controller": "Reports",
+          "Action": "RabbitTopUpRemittance",
+          "Url": null,
+          "LinkText": "Rabbit Top Up Report",
+          "Icon": "",
+          "Children": [ [] ]
+        },
+        {
+          "Id": "F0423",
+          "Controller": "Reports",
+          "Action": "MPayTopUpRemittance",
+          "Url": null,
+          "LinkText": "mPay TopUp Remittance ",
+          "Icon": "",
+          "Children": [ [] ]
         }
       ]
     ]

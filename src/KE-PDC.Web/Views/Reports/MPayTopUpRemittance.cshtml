@@ -1,0 +1,200 @@
+﻿@{
+    ViewData["Title"] = "mPayTopUp Remittance";
+    ViewData["Action"] = "verify";
+}
+
+@section links {
+    <link rel="stylesheet" href="~/lib/bootstrap-select/dist/css/bootstrap-select.css" />
+    <link rel="stylesheet" href="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.css" />
+    <link rel="stylesheet" href="~/assets/vendor/thbank-font/css/thbanklogos.min.css" />
+    <link rel="stylesheet" href="~/assets/stylesheets/confirm.css" />
+    <style>
+        .divider-y:after {
+            content: "";
+            width: 1px;
+            background-color: #eeeeee;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+}
+
+@section scripts {
+    <script src="~/lib/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/lib/jquery.bootgrid/dist/jquery.bootgrid.min.js"></script>
+    <script src="~/lib/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+    <script src="~/lib/jquery-maskmoney/dist/jquery.maskMoney.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/moment/min/moment-with-locales.min.js"></script>
+    <script src="~/lib/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/lib/bootstrap-tagsinput/dist/bootstrap-tagsinput.js"></script>
+    <script src="~/lib/matchheight/dist/jquery.matchHeight-min.js"></script>
+    <script src="~/assets/javascripts/bootstrap-select-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootgrid-default.js"></script>
+    <script src="~/assets/javascripts/jquery.bootstrap-datetimepicker.js"></script>
+    <script src="~/assets/javascripts/jquery.validation-default.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            let fractionDigits = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+
+            // FORM SEARCH
+            // ======================
+            var searchFirstTime = true;
+            var gridSearchResults;
+
+            $('[type=reset]').click(function (e) {
+                e.preventDefault();
+                $(this).closest('form').get(0).reset();
+                $("select").selectpicker('render');
+            });
+
+            //$('#search').on('click', function () {
+            //    var Date = $('#SearchDateRemittance').val();
+                
+            //    $.ajax({
+            //        type: "POST",
+            //        url: endpoint + "mPayRemittance",
+            //        data: JSON.stringify({ Date: Date}),
+            //        contentType: "application/json; charset=utf-8",
+            //        dataType: "json",
+            //        processData: false,
+            //        success: function (response) {
+            //            console.log(response)
+            //            alert(response.data[0])
+            //            console.log(response.data[0])
+            //        },
+            //        error: function (e) {
+            //            swal("Oops!", "Can't Upload Excel", "error")
+            //            return false;
+            //        }
+            //    });
+            //});
+            $("#form-search").validate({
+                submitHandler: function (form) {
+                    $.pageLoader("show");
+                    var $form = $(form);
+
+                    if (searchFirstTime) {
+                        searchFirstTime = false;
+
+                        gridSearchResults = $("#grid-search-results").bootgrid({
+                            ajaxSettings: {
+                                method: "POST",
+                            },
+                            url: endpoint + "mPayRemittance",
+                            requestHandler: function (request) {
+                                var BranchList = $form.find('select[name="BranchList"]').val(),
+                                    request = {
+                                        DateRemittance:  $form.find('input[name="DateRemittance"]').val(),
+
+                                        // Pagination
+                                        page: request.current,
+                                        perPage: request.rowCount,
+                                        order: Object.keys(request.sort)[0],
+                                        direction: request.sort[Object.keys(request.sort)[0]],
+                                        searchPhrase: request.searchPhrase,
+                                    };
+
+                                $("#grid-search-results").data("export-params", request);
+
+                                return request;
+                            },
+                            sorting: false,
+                            selection: true,
+                            multiSelect: true,
+                            templates: {
+                                header: '<div id="{{ctx.id}}" class="{{css.header}}"><div class="row"><div class="col-md-4"><h2 class="card-title form-control-static"><button class="btn btn-primary sr-only" data-command="confirm-select">Confirm Select</button></h2></div><div class="col-md-8 actionBar"><p class="{{css.actions}}"></p><div class="btn-group m-l-20">@if (ViewData["Action"].Equals("") || true) { <buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="excel" data-ke-target="#grid-search-results">@SharedLocalizer["Export (Excel)"]</buttom>}@if (ViewData["Action"].Equals("linetopupremittance")) { <buttom class="btn btn-default" data-ke-action="export" data-ke-filetype="pdf" data-ke-target="#grid-search-results"><i class="ion-document-text"></i> @SharedLocalizer["Export (PDF)"]</buttom>}</div></div></div></div>',
+                            },
+                            formatters: {
+                                erP_ID: function (column, row) {
+                                    var chkerp = row.erP_ID == null ? '-' : row.erP_ID
+                                    return chkerp
+                                }
+                            }
+                        }).on("loaded.rs.jquery.bootgrid", function () {
+                            $.pageLoader("hide");
+
+                            gridSearchResults
+                            .find('[data-toggle="tooltip"]').tooltip({
+                                container: "body",
+                            }).end();
+                        });
+
+                        $("#card-search-results").delay(500).fadeIn(300);
+                    }
+                    else {
+                        gridSearchResults.bootgrid("reload");
+                    }
+                }
+            });
+
+
+            // EXPORT
+            // ======================
+            $("body").on("click", '[data-ke-action="export"]', function (e) {
+                var $this = $(this),
+                    $target = $($this.data("ke-target")),
+                    params = $target.data("export-params"),
+                    filetype = $this.data("ke-filetype"),
+                    type = $this.data("ke-type");
+
+                params.filetype = filetype;
+                params.type = type;
+                console.log(type)
+
+                var form = $('<form/>');
+                form.attr('action', endpoint + 'mPayRemittance').attr('method', 'POST').attr('target', '_blank');
+
+                $.each(params, function (k, v) {
+                    console.log(k)
+                    if (typeof v !== 'undefined') {
+                        $(form).append($('<input name="' + k + '" value="' + v + '" type="hidden">'));
+                    }
+                });
+
+                $('body').append(form);
+
+                form.submit();
+                form.remove();
+            });
+        });
+
+    </script>
+}
+
+<div class="block-header">
+    <h2 class="block-title">@ViewData["Title"]</h2>
+</div>
+
+@await Html.PartialAsync("Shared/_FormSearchmPay")
+
+<div id="card-search-results" class="card" style="display: none;">
+    <div class="card-body table-responsive">
+        <div>
+            <table id="grid-search-results" class="table table-card table-bordered table-condensed table-hover unordered">
+                <thead>
+                    <tr>
+                        <th data-column-id="erP_ID" data-formatter="erpid" nowrap>@SharedLocalizer["ERP ID"]</th>
+                        <th data-column-id="branchID" data-css-class="bg-m-blue bg-m-lighten-5 text-center" data-header-css-class="bg-m-blue bg-m-lighten-4" data-header-align="center">@SharedLocalizer["Branch"]</th>
+                        @*<th data-column-id="dmsid" >@SharedLocalizer["DMSID"]</th>*@
+                        <th data-column-id="branch_type">@SharedLocalizer["Branch type"]</th>
+                        <th data-column-id="branchName">@SharedLocalizer["Branch name"]</th>
+                        @*<th data-column-id="tuc" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right" data-formatter="tuc">@SharedLocalizer["TUC"]</th>
+        <th data-column-id="tup" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right">@SharedLocalizer["TUP"]</th>
+        <th data-column-id="tud" data-type="decimal" data-header-css-class="text-right" data-css-class="text-right">@SharedLocalizer["TUD"]</th>*@
+                        <th data-column-id="captured" data-formatter="captured">@SharedLocalizer["Captured"]</th>
+                        <th data-column-id="capturedBy">@SharedLocalizer["Captured by"]</th>
+                        <th data-column-id="capturedDate" data-type="date">@SharedLocalizer["Captured date"]</th>
+                        <th data-column-id="reportDate" data-type="date">@SharedLocalizer["Report date"]</th>
+                        <th data-column-id="unit_price" data-type="decimal" data-css-class="text-center text-nowrap" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">Unit Price</th>
+                        <th data-column-id="mPay_transaction_Id" data-css-class="text-center text-nowrap" data-header-align="center" data-header-css-class="bg-m-amber bg-m-lighten-5" data-width="auto; white-space: nowrap !important">Transaction Id</th>
+                        <th data-column-id="remittanceDate" data-type="date">@SharedLocalizer["Remittance date"]</th>
+
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>

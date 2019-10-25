@@ -78,8 +78,17 @@ namespace KE_PDC.Controllers
         {
             return await Report(1208, View("Index"));
         }
+        public async Task<IActionResult> MPayTopUpRemittance()
+        {
+            return await Report(1209, View());
+        }
+
+        public async Task<IActionResult> RabbitTopUpRemittance()
+        {
+            return await Report(1210, View());
+        }
         #endregion
-        
+
         #region FC Version 2.0.0
         // GET: /<controller>/DailyRevenueConfirmFC
         public async Task<IActionResult> DailyRevenueConfirmFC()

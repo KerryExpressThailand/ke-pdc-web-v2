@@ -1,0 +1,31 @@
+﻿@model ReportViewModel 
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Search</h2>
+    </div>
+    <div class="card-body card-padding">
+        <form id="form-search">
+           
+            <div class="row">
+                <div class="col-sm-3 col-md-4">
+                    <div class="form-group">
+                        <label class="control-label">Remittance date</label>
+                        <div class="input-group-icon">
+                            <span class="input-group-addon-icon"><i class="ion-calendar"></i></span>
+                            <input asp-for="DateRemittance" id="SearchDateRemittance" class="form-control input-mask date-picker" data-mask="00/00/0000" value="18/10/2019" type="text" name="DateRemittance">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3 col-md-4">
+                    <div class="form-group">
+                        <label class="control-label">&nbsp;</label>
+                        <div>
+                            <button type="submit" id="search" class="btn btn-primary btn-search">@SharedLocalizer["Search"]</button>
+                   
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
