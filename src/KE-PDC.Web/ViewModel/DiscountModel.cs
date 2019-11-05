@@ -32,6 +32,7 @@ namespace KE_PDC.ViewModel
         public string DateTo { get; set; }
         public List<string> DiscountTypeList { get; set; }
         public List<string> BranchIdList { get; set; }
+        public string BranchList { get; set; }
     }
 
     public class ReqDiscountType
@@ -40,5 +41,6 @@ namespace KE_PDC.ViewModel
         public string DateTo { get; set; }
         public List<DiscountTypeList> DiscountTypeList { get; set; }
         public List<BranchIdList> BranchIdList { get; set; }
+        public string BranchList { get; set; }
     }
 }

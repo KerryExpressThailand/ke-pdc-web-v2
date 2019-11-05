@@ -199,8 +199,8 @@
                                         });
 
 
-                                        var totalService = (result.freight + result.cod + result.insur + result.package + result.salePackage + result.lineTopUp) - result.discount,
-                                            totalPayment = result.cash + result.rabbit + result.credit + result.linePay + result.qrPay,
+                                        var totalService = (result.freight + result.cod + result.insur + result.package + result.salePackage + result.lineTopUp + result.rabbitTopUp + result.mPayService) - result.discount ,
+                                            totalPayment = result.cash + result.rabbit + result.credit + result.linePay + result.qrPay ,
                                             totalSurcharge = (result.transportation + result.vasSurcharge + result.vat) - result.discount,
                                             bsdTotalAccout = (result.bsdSurcharge) - result.discountBSD,
                                             bsdTotalPayment = result.bsdCash + result.bsdLinePay,

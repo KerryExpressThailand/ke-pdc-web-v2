@@ -46,6 +46,7 @@ namespace KE_PDC.Areas.Api.Controllers
         {
             try
             {
+                string[] lines = ReqDiscount.BranchList.Split(",");
 
                 Pagination pagination = new Pagination(HttpContext);
 
@@ -59,7 +60,7 @@ namespace KE_PDC.Areas.Api.Controllers
                     return ExportExcelDiscountReport(ReqDiscount, DateTo, DateFrom);
                 }
                 List<BranchIdList> _items = new List<BranchIdList>();
-                foreach (var branch in ReqDiscount.BranchIdList)
+                foreach (var branch in lines)
                 {
                     BranchIdList _b = new BranchIdList
                     {
@@ -92,7 +93,6 @@ namespace KE_PDC.Areas.Api.Controllers
                     SqlDbType = SqlDbType.NVarChar,
                     SqlValue = json,
                     Size = int.MaxValue
-
                 };
 
                 SqlParameter jsonOutput = new SqlParameter()
@@ -123,7 +123,7 @@ namespace KE_PDC.Areas.Api.Controllers
                 //JObject dd = JObject.Parse("[" + jsonOutput.Value.ToString() + "]");
                 ResResultDiscount Discount = JsonConvert.DeserializeObject<ResResultDiscount>(jsonOutput.Value.ToString());
 
-
+                //GlobalVal._listDiscount = Discount;
 
                 List<DiscountModel> disc = new List<DiscountModel>();
                 foreach (var item in Discount.Result)
@@ -147,7 +147,7 @@ namespace KE_PDC.Areas.Api.Controllers
                     disc.Add(dc);
                 }
 
-             
+                GlobalVal._listDiscount = disc;
 
                 int totalCount = Discount.Result.Count();
 

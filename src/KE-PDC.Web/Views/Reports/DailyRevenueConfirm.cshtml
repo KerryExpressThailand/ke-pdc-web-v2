@@ -190,7 +190,7 @@
                                             $e.text(textValue);
                                         });
 
-                                        var totalService = (result.freight + result.cod + result.insur + result.package + result.salePackage + result.lineTopUp) - result.discount,
+                                        var totalService = (result.freight + result.cod + result.insur + result.package + result.salePackage + result.lineTopUp ) - result.discount + result.rabbitTopUp + result.mPayService,
                                             totalPayment = result.cash + result.rabbit + result.credit + result.linePay + + result.qrPay,
                                             totalSurcharge = (result.transportation + result.vasSurcharge + result.vat) - result.discount,
                                             bsdTotalAccout = (result.bsdSurcharge) - result.discountBSD,
@@ -255,6 +255,20 @@
                                         .end().modal("show");
 
                                         $.pageLoader("hide");
+
+                                         if (result.checkReconcile === 0) {
+                                            $("#check-cross").show();
+                                            $("#check-check").hide();
+                                            $("#check-minus").hide();
+                                        } else if (result.checkReconcile === 1) {
+                                            $("#check-cross").hide();
+                                            $("#check-check").show();
+                                            $("#check-minus").hide();
+                                        } else {
+                                            $("#check-cross").hide();
+                                            $("#check-check").hide();
+                                            $("#check-minus").show();
+                                        }
                                     }
                                     else {
                                         var message = response.messages.length > 0 ? response.messages[0] : response.errors[0].message;

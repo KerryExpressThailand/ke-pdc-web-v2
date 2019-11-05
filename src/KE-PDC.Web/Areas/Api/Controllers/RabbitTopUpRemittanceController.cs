@@ -86,17 +86,30 @@ namespace KE_PDC.Web.Areas.Api.Controllers
                     Direction = ParameterDirection.Output,
                     Size = int.MaxValue
                 };
-
+                List<RabbitTopUpRabbit> mPay = new List<RabbitTopUpRabbit>();
                 DB.Database.ExecuteSqlCommand(" sp_PDC_TopUpRemittanceDate @jsonreq, @jsonOutput OUTPUT ", jsonInput, jsonOutput);
+                var data = jsonOutput.Value.ToString();
+                if (data == "" || data == null)
+                {
+                    Response.Success = false;
+                    Response.Result = mPay;
+                    Response.ResultInfo = new
+                    {
+                        page = pagination.Page,
+                        perPage = pagination.PerPage,
+                        count = 0,
+                        totalCount = 0
+                    };
+                    return Json(Response.Render());
+                }
                 ResultRemittancedetailRabbit MPayRemittance = JsonConvert.DeserializeObject<ResultRemittancedetailRabbit>(jsonOutput.Value.ToString());
 
 
-                List<RabbitTopUpRabbit> mPay = new List<RabbitTopUpRabbit>();
+                
                 foreach (var item in MPayRemittance.Result)
                 {
                     RabbitTopUpRabbit dc = new RabbitTopUpRabbit
                     {
-                        id = item.id,
                         BranchID = item.BranchID,
                         ReportDate = item.ReportDate,
                         DMSID = item.DMSID,
@@ -176,20 +189,16 @@ namespace KE_PDC.Web.Areas.Api.Controllers
 
             _worksheetDiscount.ImportData(Remittancedetail.Select(i => new
             {
-                i.id,
                 i.ERP_ID,
                 i.BranchID,
                 i.branch_type,
                 i.BranchName,
-                i.TUC,
-                i.TUP,
-                i.TUD,
+                i.Rabbit_transaction_Id,
+                i.unit_price,
                 i.Captured,
                 i.CapturedBy,
                 i.CapturedDate,
                 i.ReportDate,
-                i.unit_price,
-                i.Rabbit_transaction_Id,
                 i.RemittanceDate,
 
             }), 4, 1, false);

@@ -37,8 +37,6 @@ namespace KE_PDC.Models
     }
     public class Remittancedetail
     {
-        [Key]
-        public string id { get; set; }
         public string BranchID { get; set; }
         public DateTime ReportDate { get; set; }
         public string DMSID { get; set; }
@@ -64,8 +62,7 @@ namespace KE_PDC.Models
     }
     public class RabbitTopUpRabbit
     {
-        [Key]
-        public string id { get; set; }
+        
         public string BranchID { get; set; }
         public DateTime ReportDate { get; set; }
         public string DMSID { get; set; }
