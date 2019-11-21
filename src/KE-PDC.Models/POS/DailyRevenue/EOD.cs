@@ -62,5 +62,9 @@ namespace KE_PDC.Models
         public decimal BSDTotalDetailService { get; set; }
         public decimal BSDTotalPayment { get; set; }
         public decimal BSDTotalPaymentCash { get; set; }
+
+        //add new
+        public decimal mPayService { get; set; }
+        public decimal rabbitTopUp { get; set; } 
     }
 }

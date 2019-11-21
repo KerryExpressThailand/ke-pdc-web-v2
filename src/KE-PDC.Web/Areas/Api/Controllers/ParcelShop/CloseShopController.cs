@@ -192,6 +192,8 @@ namespace KE_PDC.Web.Areas.Api.Controllers.Dashboard
                 o.PACKAGEService,
                 o.SALEService,
                 o.LNTUPService,
+                o.rabbitTopUp,
+                o.mPayService,
                 ServiceDiscount = o.Discount,
                 o.Shipment,
                 o.Boxes,
@@ -244,7 +246,7 @@ namespace KE_PDC.Web.Areas.Api.Controllers.Dashboard
         private FileStreamResult ExportPDF(List<EOD> edo)
         {
             // Load the PDF Template
-            Stream pdfStream = System.IO.File.OpenRead(_hostingEnvironment.WebRootPath + @"\assets\templates\CloseShop.pdf");
+            Stream pdfStream = System.IO.File.OpenRead(_hostingEnvironment.WebRootPath + @"\assets\templates\CloseShop2.pdf");
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             PdfFont font = new PdfStandardFont(PdfFontFamily.Helvetica, (float)8);
@@ -328,47 +330,56 @@ namespace KE_PDC.Web.Areas.Api.Controllers.Dashboard
                 graphics.DrawString(e.TransportService.ToString("N"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);
 
                 // AM Service
-                yPosition += gap + 2;
+                yPosition += gap-1;
                 graphics.DrawString(e.AMService.ToString("N"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);
 
                 // PUP Service
-                yPosition += gap + 2;
+                yPosition += gap - 2;
                 graphics.DrawString(e.PUPService.ToString("N"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);
 
                 // SAT Service
-                yPosition += gap + 2;
+                yPosition += gap - 1;
                 graphics.DrawString(e.SATService.ToString("N"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);
 
                 // RAS Service
-                yPosition += gap + 2;
+                yPosition += gap - 1;
                 graphics.DrawString(e.RASService.ToString("N"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);
 
                 // COD Service
-                yPosition += gap + 2;
+                yPosition += gap - 1;
                 graphics.DrawString(e.CODService.ToString("N"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);
 
                 // INSUR Service
-                yPosition += gap + 2;
+                yPosition += gap - 1;
                 graphics.DrawString(e.INSURService.ToString("N"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);
 
                 // Package Service
-                yPosition += gap + 2;
+                yPosition += gap - 2;
                 graphics.DrawString(e.PACKAGEService.ToString("N"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);
 
                 // Sale Package Service
-                yPosition += gap + 2;
+                yPosition += gap - 1;
                 graphics.DrawString(e.SALEService.ToString("N"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);
 
-                // Line Top-up Service
-                yPosition += gap + 2;
-                graphics.DrawString(e.LNTUPService.ToString("N"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);
-
+                
                 // Discount
-                yPosition += gap + 2;
+                yPosition += gap + 1;
                 graphics.DrawString(e.Discount.ToString("N"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);
 
+                // Line Top-up Service
+                yPosition += gap - 1;
+                graphics.DrawString(e.LNTUPService.ToString("N"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);               
+
+                //rabbitTopUp
+                yPosition += gap + 2;
+                graphics.DrawString(e.rabbitTopUp.ToString("N"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);
+
+                //mPayService
+                yPosition += gap - 1;
+                graphics.DrawString(e.mPayService.ToString("N"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);
+
                 // Total Shipments
-                yPosition += gap + 9;
+                yPosition += gap;
                 graphics.DrawString(e.Shipment.ToString("N0"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);
 
                 // Total Boxes
@@ -385,7 +396,7 @@ namespace KE_PDC.Web.Areas.Api.Controllers.Dashboard
                 #endregion
 
                 // Total Freight Revenue
-                yPosition += (float)27;
+                yPosition += (float)26;
                 graphics.DrawString(e.TotalFreightRevenue.ToString("N"), fontTextCalibri, PdfBrushes.Black, new PointF(xPosition, yPosition), formatAlignRight);
 
                 #region Detail Pay

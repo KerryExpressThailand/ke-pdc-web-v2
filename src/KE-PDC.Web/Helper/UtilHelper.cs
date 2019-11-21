@@ -51,6 +51,7 @@ namespace KE_PDC.Helper
             return decimal.Parse(numberText, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint).ToString();
         }
 
+       
         public DateTime? ToDate(string dateText, string dateFormat = "dd/MM/yyyy", string _culture = "en-US")
         {
             try
